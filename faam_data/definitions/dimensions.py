@@ -34,3 +34,8 @@ Time = Dimension(
     name='Time',
     size=None
 )
+
+time = Dimension(
+    name='time',
+    size=None
+)

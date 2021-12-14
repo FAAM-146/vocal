@@ -7,9 +7,9 @@ from .dimension import Dimension
 class VariableMeta(BaseModel):
     datatype: str = Field(description='The type of the data')
     name: str
-    dimensions: List[Dimension]
 
 
 class Variable(BaseModel):
-    meta: VariableMeta  
+    meta: VariableMeta
+    dimensions: List[Dimension]
     attributes: VariableAttributes

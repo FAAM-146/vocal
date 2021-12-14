@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 
 from faam_data.attributes import GlobalAttributes, GroupAttributes
 from faam_data.variable import Variable
+from faam_data.dimension import Dimension
 
 
 class Group(BaseModel):
@@ -12,8 +13,9 @@ class Group(BaseModel):
         title = 'FAAM Group Schema'
 
     attributes: GroupAttributes
-    groups: List[Group]
-    variables: List[Variable]
+    dimensions: list[Dimension]
+    groups: list[Group]
+    variables: list[Variable]
     
 Group.update_forward_refs()
 
@@ -24,7 +26,4 @@ class Dataset(BaseModel):
 
     attributes: GlobalAttributes
     groups: Optional[Group]
-    variables: List[Variable]
-
-
-print(Group.schema_json())
+    variables: list[Variable]
