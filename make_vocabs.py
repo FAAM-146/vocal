@@ -4,9 +4,9 @@ import json
 import importlib
 import pkgutil
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from contextlib import contextmanager
-from typing import Any, ContextManager, Iterator,  Protocol, Tuple
+from typing import Any, Container, ContextManager, Iterator,  Protocol, Tuple, Type
 
 from pydantic.main import BaseModel
 
@@ -21,25 +21,54 @@ BASE_FOLDER = 'vocabularies'
 
 @dataclass
 class FolderManager:
+    """
+    A class which manages folder creation and context switching.
+    """
+
     base_folder: str
     version: str
 
-    def make_folder(self, folder: str) -> str:
+    def make_folder(self, folder: str) -> None:
+        """
+        Creates a specified folder in the current directory. If the folder
+        already exists and contains any files, these files will be removed.
+
+        Args:
+            folder: the name of the folder to create
+        """
         os.makedirs(folder, exist_ok=True)
         self.clean_folder(folder)
-        return folder
 
     def clean_folder(self, folder: str) -> list[str]:
+        """
+        Remove the contents of a given directory.
+
+        Args:
+            folder: the name of the folder to empty
+
+        Returns:
+            a list of the deleted contents of folder
+        """
         _files = os.listdir(folder)
         for _file in _files:
             os.remove(os.path.join(folder, _file))
         return _files
 
     def _folder_name(self) -> str:
+        """
+        Build an output folder name
+
+        Returns: 
+            the name of the output folder
+        """
         return os.path.join(self.base_folder, self.version)
 
     @contextmanager # type: ignore
     def in_folder(self) -> Iterator[None]:
+        """
+        Returns a context manager, which temporarily changes the working
+        directory, creating if if it doesn't exist.
+        """
         folder = self._folder_name()
         if not os.path.isdir(folder):
             self.make_folder(folder)
@@ -61,6 +90,9 @@ class SupportsInFolder(Protocol):
 
 @dataclass # type: ignore # mypy issue with abstract dataclasses
 class BaseWriter(ABC):
+    """
+    An abstract class, defining an interface for writing vocabs to file.
+    """
     
     model: Any 
     name: str
@@ -70,9 +102,15 @@ class BaseWriter(ABC):
     @property
     @abstractmethod
     def _json(self) -> str:
+        """
+        return a string json representation of model
+        """
         return NotImplemented
 
     def write(self) -> None:
+        """
+        Write the model to file, as json, in a location given by folder_manager
+        """
         _filename = f'{self.name}.json'
         with self.folder_manager.in_folder():
             mode = 'w' if not os.path.exists(_filename) else 'a'
@@ -81,6 +119,9 @@ class BaseWriter(ABC):
 
 
 class InstanceWriter(BaseWriter):
+    """
+    Implements a writer intended to write out model instances to file.
+    """
 
     model: BaseModel
 
@@ -91,6 +132,9 @@ class InstanceWriter(BaseWriter):
 
 
 class SchemaWriter(BaseWriter):
+    """
+    Implements a writer intended to write model schema to file.
+    """
 
     model: BaseModel
 
@@ -99,7 +143,13 @@ class SchemaWriter(BaseWriter):
         return json.dumps(self.model.schema(), indent=self.indent)
 
 
-class DictWriter(BaseWriter):
+class ContainerWriter(BaseWriter):
+    """
+    Implements a writer indended to write native containers to file. 
+    Assumes that these will be json serializable.
+    """
+
+    model: Container
 
     @property
     def _json(self) -> str:
@@ -108,9 +158,17 @@ class DictWriter(BaseWriter):
 
 @dataclass
 class DatasetDiscoverer:
+    """
+    Class for discovering dataset definitions.
+    """
+
     module_path: str = 'faam_data.definitions'
 
     def discover(self) -> Iterator[Tuple[str, Dataset]]:
+        """
+        Return a generator which yields 2-tuples of dataset name and dataset
+        """
+
         modules = importlib.import_module(self.module_path)
 
         for i in pkgutil.iter_modules(modules.__path__): # type: ignore
@@ -127,9 +185,17 @@ class DatasetDiscoverer:
 
 @dataclass
 class DimensionDiscoverer:
+    """
+    Class for discovering dimension definitions
+    """
+
     module_path: str = 'faam_data.definitions.dimensions'
 
     def discover(self) -> Iterator[Dimension]:
+        """
+        Returns a generator which yields Dimensions which have been defined in
+        module_path.
+        """
         module = importlib.import_module(self.module_path)
         for member_name in dir(module):
             member = getattr(module, member_name)
@@ -137,41 +203,65 @@ class DimensionDiscoverer:
                 yield member
            
 
-def write_datasets(folder_manager: SupportsInFolder) -> None:
-    for name, dataset in DatasetDiscoverer().discover():
-        writer = InstanceWriter(
-            model=dataset, name=name, folder_manager=folder_manager
+@dataclass
+class VocabularyCreator:
+
+    folder_manager: Type[FolderManager]
+    base_folder: str
+    version: str
+
+    def write_datasets(self, folder_manager: SupportsInFolder) -> None:
+        """
+        Write defined datasets to file.
+        """
+        for name, dataset in DatasetDiscoverer().discover():
+            writer = InstanceWriter(
+                model=dataset, name=name, folder_manager=folder_manager
+            )
+            writer.write()
+
+    def write_dimensions(self, folder_manager: SupportsInFolder) -> None:
+        """
+        Write defined dimensions to file.
+        """
+        dims = []
+        for dimension in DimensionDiscoverer().discover():
+            dims.append(dimension.dict())
+        writer = ContainerWriter(
+            model=dims, name='dimensions', folder_manager=folder_manager
         )
         writer.write()
 
-def write_dimensions(folder_manager: SupportsInFolder) -> None:
-    dims = []
-    for dimension in DimensionDiscoverer().discover():
-        dims.append(dimension.dict())
-    writer = DictWriter(
-        model=dims, name='dimensions', folder_manager=folder_manager
-    )
-    writer.write()
+    def write_schemata(self, folder_manager: SupportsInFolder) -> None:
+        """
+        Write dataset, group, and variable schemata to file.
+        """
+        models = (Dataset, Group, Variable)
+        names = ('dataset_schema', 'group_schema', 'variable_schema')
 
-def write_schemata(folder_manager: SupportsInFolder) -> None:
-    models = (Dataset, Group, Variable)
-    names = ('dataset_schema', 'group_schema', 'variable_schema')
+        for model, name in zip(models, names):
+            writer = SchemaWriter(
+                model=model, name=name, folder_manager=folder_manager
+            )
+            writer.write()
 
-    for model, name in zip(models, names):
-        writer = SchemaWriter(
-            model=model, name=name, folder_manager=folder_manager
-        )
-        writer.write()
+    def create_vocabulary(self) -> None:
+        """
+        Create vocabularies.
+        """
+        versions = (f'v{self.version}', 'latest')
+
+        for version in versions:
+            folder_manager = self.folder_manager(
+                base_folder=self.base_folder, version=version
+            )
+            self.write_datasets(folder_manager)
+            self.write_schemata(folder_manager)
+            self.write_dimensions(folder_manager)
 
 
 if __name__ == '__main__':
-    versions = (f'v{version}', 'latest')
-
-    for version in versions:
-        folder_manager = FolderManager(base_folder=BASE_FOLDER, version=version)
-        write_datasets(folder_manager)
-        write_schemata(folder_manager)
-        write_dimensions(folder_manager)
-    
+    creator = VocabularyCreator(FolderManager, BASE_FOLDER, version)
+    creator.create_vocabulary()   
 
     
