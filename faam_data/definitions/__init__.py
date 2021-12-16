@@ -24,7 +24,7 @@ def variable_attribute_factory(**kwargs: Any) -> VariableAttributes:
     attributes, along with any specified optional attributes. Specified
     attributes may also be used to override defaults.
     """
-    attributes = VariableAttributes.construct(**required_variable)
+    attributes = VariableAttributes.construct(**required_variable) # type: ignore
     for key, value in kwargs.items():
         setattr(attributes, key, value)
     return attributes
@@ -43,7 +43,7 @@ def global_attribute_factory(**kwargs: Any) -> GlobalAttributes:
     attributes, along with any specified optional attributes. Specified
     attributes may also be used to override defaults.
     """
-    attributes = GlobalAttributes.construct(**required_globals)
+    attributes = GlobalAttributes.construct(**required_globals) # type: ignore
     for key, value in kwargs.items():
         setattr(attributes, key, value)
     return attributes
