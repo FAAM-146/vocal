@@ -4,9 +4,9 @@ import json
 import importlib
 import pkgutil
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from contextlib import contextmanager
-from typing import Iterator, Optional, Protocol, Tuple
+from typing import Any, ContextManager, Iterator,  Protocol, Tuple
 
 from pydantic.main import BaseModel
 
@@ -23,13 +23,10 @@ BASE_FOLDER = 'vocabularies'
 class FolderManager:
     base_folder: str
     version: str
-    folder: Optional[str] = None
 
-    def make_folder(self) -> str:
-        folder = os.path.join(self.base_folder, self.version)
+    def make_folder(self, folder: str) -> str:
         os.makedirs(folder, exist_ok=True)
         self.clean_folder(folder)
-        self.folder = folder
         return folder
 
     def clean_folder(self, folder: str) -> list[str]:
@@ -38,37 +35,42 @@ class FolderManager:
             os.remove(os.path.join(folder, _file))
         return _files
 
-    @contextmanager
-    def in_folder(self) -> None:
-        if self.folder is None:
-            self.make_folder()
+    def _folder_name(self) -> str:
+        return os.path.join(self.base_folder, self.version)
+
+    @contextmanager # type: ignore
+    def in_folder(self) -> Iterator[None]:
+        folder = self._folder_name()
+        if not os.path.isdir(folder):
+            self.make_folder(folder)
         
         cwd = os.getcwd()
         try:
-            os.chdir(self.folder)
-            yield self.folder
+            os.chdir(folder)
+            yield
         except Exception:
             raise
         finally:
             os.chdir(cwd)
 
 
-class FolderSwitcher(Protocol):
-    def in_folder(self) -> None:
+class SupportsInFolder(Protocol):
+    def in_folder(self) -> ContextManager[None]:
         ...
 
 
-@dataclass
+@dataclass # type: ignore # mypy issue with abstract dataclasses
 class BaseWriter(ABC):
-    model: BaseModel
+    
+    model: Any 
     name: str
-    folder_manager: FolderSwitcher
-    indent: Optional[int] = 2
+    folder_manager: SupportsInFolder
+    indent: int = 2
 
     @property
     @abstractmethod
     def _json(self) -> str:
-        pass
+        return NotImplemented
 
     def write(self) -> None:
         _filename = f'{self.name}.json'
@@ -80,6 +82,8 @@ class BaseWriter(ABC):
 
 class InstanceWriter(BaseWriter):
 
+    model: BaseModel
+
     @property
     def _json(self) -> str:
         _dict = self.model.dict(exclude_unset=True)
@@ -87,6 +91,8 @@ class InstanceWriter(BaseWriter):
 
 
 class SchemaWriter(BaseWriter):
+
+    model: BaseModel
 
     @property
     def _json(self) -> str:
@@ -102,12 +108,12 @@ class DictWriter(BaseWriter):
 
 @dataclass
 class DatasetDiscoverer:
-    module_path: Optional[str] = 'faam_data.definitions'
+    module_path: str = 'faam_data.definitions'
 
     def discover(self) -> Iterator[Tuple[str, Dataset]]:
         modules = importlib.import_module(self.module_path)
 
-        for i in pkgutil.iter_modules(modules.__path__):
+        for i in pkgutil.iter_modules(modules.__path__): # type: ignore
             if not i.ispkg:
                 continue
             
@@ -121,7 +127,7 @@ class DatasetDiscoverer:
 
 @dataclass
 class DimensionDiscoverer:
-    module_path: Optional[str] = 'faam_data.definitions.dimensions'
+    module_path: str = 'faam_data.definitions.dimensions'
 
     def discover(self) -> Iterator[Dimension]:
         module = importlib.import_module(self.module_path)
@@ -131,14 +137,14 @@ class DimensionDiscoverer:
                 yield member
            
 
-def write_datasets(folder_manager: FolderSwitcher) -> None:
+def write_datasets(folder_manager: SupportsInFolder) -> None:
     for name, dataset in DatasetDiscoverer().discover():
         writer = InstanceWriter(
             model=dataset, name=name, folder_manager=folder_manager
         )
         writer.write()
 
-def write_dimensions(folder_manager: FolderSwitcher) -> None:
+def write_dimensions(folder_manager: SupportsInFolder) -> None:
     dims = []
     for dimension in DimensionDiscoverer().discover():
         dims.append(dimension.dict())
@@ -147,7 +153,7 @@ def write_dimensions(folder_manager: FolderSwitcher) -> None:
     )
     writer.write()
 
-def write_schemata(folder_manager: FolderSwitcher) -> None:
+def write_schemata(folder_manager: SupportsInFolder) -> None:
     models = (Dataset, Group, Variable)
     names = ('dataset_schema', 'group_schema', 'variable_schema')
 
