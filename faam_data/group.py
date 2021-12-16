@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from .attributes import GroupAttributes
 from .dimension import Dimension
-from variable import Variable
+from .variable import Variable
 
 
 class GroupMeta(BaseModel):
