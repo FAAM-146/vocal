@@ -4,6 +4,7 @@ from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, root_validator
+from pydantic.class_validators import validator
 
 from ..constants import (
     ACKNOWLEDGEMENT, CREATOR_ADDRESS, CREATOR_INSTITUTION, CREATOR_TYPES,
@@ -11,7 +12,7 @@ from ..constants import (
     PUBLISHER_URL, PUBLISHER_INSTITUTION
 )
 
-from ..validation import is_in_factory, default_value_factory, re_validator
+from ..validation import is_in_factory, default_value_factory, re_validator, substitute_placeholders
 
 class GlobalAttributes(BaseModel):
     class Config:
@@ -321,7 +322,7 @@ class GlobalAttributes(BaseModel):
 
     instrument_manufacturer: Optional[str] = Field(
         description='Where all data are from a single instrument. Instrument manufacturer',
-        example='Instrument Manufacturer'
+        example='Instrument Manufacturing Ltd.'
     )
 
     instrument_model: Optional[str] = Field(
@@ -414,7 +415,9 @@ class GlobalAttributes(BaseModel):
         example=2
     )
 
-
+    # Allow the use of placeholders, which will be subbed out with examples
+    subs_placeholders = root_validator(pre=True, allow_reuse=True)(substitute_placeholders)
+    
     _validate_acknowledgement = re_validator('acknowledgement')(default_value_factory(ACKNOWLEDGEMENT))
     _validate_creator_address = re_validator('creator_address')(default_value_factory(CREATOR_ADDRESS))
     _validate_creator_institution = re_validator('creator_institution')(default_value_factory(CREATOR_INSTITUTION))
