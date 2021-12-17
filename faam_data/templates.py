@@ -45,6 +45,7 @@ required_globals = {
     'publisher_institution': PUBLISHER_INSTITUTION,
     'publisher_type': PUBLISHER_TYPE,
     'publisher_url': PUBLISHER_URL,
+    'references': DerivedString,
     'revision_date': DerivedString,
     'revision_number': DerivedInteger32,
     'source': DerivedString,
