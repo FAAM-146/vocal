@@ -267,29 +267,25 @@ class BasicDatasetValidator:
 
     errors = False
 
-    def validate(self):
+    def validate(self) -> None:
         """
         Perform a very basic check of the defined datasets, via a round trip
         the dict and back. This can catch some errors as the datasets are
         build through construct, which does no validation. The round trip
         will force validation to be performed.
         """
-        if self.errors is None:
-            self.errors = []
-        for i in DatasetDiscoverer().discover():
+        for ds in DatasetDiscoverer().discover():
             try:
-                Dataset(**i[1].dict())
+                Dataset(**ds[1].dict())
             except ValidationError as err:
                 self.errors = True
-                print(f'Error in dataset: {i[0]}')
+                print(f'Error in dataset: {ds[0]}')
                 for e in err.errors():
                     loc = ' -> '.join([str(i) for i in e['loc']])
                     print(f'{loc}: {e["msg"]}')
         if self.errors:
             raise ValueError('Failed to validate all datasets')
         
-
-
 
 if __name__ == '__main__':
     BasicDatasetValidator().validate()
