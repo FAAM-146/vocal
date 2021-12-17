@@ -6,11 +6,13 @@ import pkgutil
 
 from dataclasses import dataclass
 from contextlib import contextmanager
-from typing import Any, Container, ContextManager, Iterator,  Protocol, Tuple, Type
+from typing import Any, Container, ContextManager, Iterator, Optional,  Protocol, Tuple, Type
+from pydantic.error_wrappers import ValidationError
 
 from pydantic.main import BaseModel
 
 from faam_data import __version__ as version
+from faam_data import dataset
 from faam_data.dataset import Dataset
 from faam_data.dimension import Dimension
 from faam_data.group import Group
@@ -260,7 +262,37 @@ class VocabularyCreator:
             self.write_dimensions(folder_manager)
 
 
+@dataclass
+class BasicDatasetValidator:
+
+    errors = False
+
+    def validate(self):
+        """
+        Perform a very basic check of the defined datasets, via a round trip
+        the dict and back. This can catch some errors as the datasets are
+        build through construct, which does no validation. The round trip
+        will force validation to be performed.
+        """
+        if self.errors is None:
+            self.errors = []
+        for i in DatasetDiscoverer().discover():
+            try:
+                Dataset(**i[1].dict())
+            except ValidationError as err:
+                self.errors = True
+                print(f'Error in dataset: {i[0]}')
+                for e in err.errors():
+                    loc = ' -> '.join([str(i) for i in e['loc']])
+                    print(f'{loc}: {e["msg"]}')
+        if self.errors:
+            raise ValueError('Failed to validate all datasets')
+        
+
+
+
 if __name__ == '__main__':
+    BasicDatasetValidator().validate()
     creator = VocabularyCreator(FolderManager, BASE_FOLDER, version)
     creator.create_vocabulary()   
 
