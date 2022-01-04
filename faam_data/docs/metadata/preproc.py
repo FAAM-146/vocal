@@ -1,3 +1,4 @@
+from typing import Mapping
 from faam_data.attributes import GlobalAttributes, GroupAttributes, VariableAttributes
 import os
 
@@ -17,12 +18,19 @@ dynamic_dir = os.path.join(
 if not os.path.exists(dynamic_dir):
     os.makedirs(dynamic_dir)
 
-def attr_text(attr, properties):
+def attr_text(attr: str, properties: Mapping) -> str:
     txt = f'* ``{attr}`` - '
 
     _type = None
+    _example = None
+
     try:
         _type = properties[attr]['type']
+    except KeyError:
+        pass
+
+    try:
+        _example = properties[attr]['example']
     except KeyError:
         pass
 
@@ -34,10 +42,21 @@ def attr_text(attr, properties):
 
     if _type is not None:
         txt += f'[{_type}] '
-    txt += f'{properties[attr]["description"]}\n'
+
+    txt += f'{properties[attr]["description"]}'
+
+    if not txt.endswith('.'):
+        txt += '.'
+    txt += ' '
+
+    if _example is not None:
+        txt += f'Example: {_example}'
+
+    txt += '\n'
+
     return txt
 
-def make_global_attrs_rst():
+def make_global_attrs_rst() -> None:
     with open(os.path.join(template_dir, 'globals.rst'), 'r') as global_template:
         text = global_template.read()
 
@@ -60,7 +79,7 @@ def make_global_attrs_rst():
     with open(os.path.join(dynamic_dir, 'globals.rst'), 'w') as f:
         f.write(text)
 
-def make_group_attrs_rst():
+def make_group_attrs_rst() -> None:
     with open(os.path.join(template_dir, 'groups.rst'), 'r') as template:
         text = template.read()
 
@@ -86,7 +105,7 @@ def make_group_attrs_rst():
     with open(os.path.join(dynamic_dir, 'groups.rst'), 'w') as f:
         f.write(text)
 
-def make_variable_attrs_rst():
+def make_variable_attrs_rst() -> None:
     with open(os.path.join(template_dir, 'variables.rst'), 'r') as template:
         text = template.read()
 
