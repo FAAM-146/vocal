@@ -1,4 +1,8 @@
 test.json
+dev_test.py
+
+# No netCDF files
+*.nc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
