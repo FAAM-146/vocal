@@ -14,7 +14,7 @@ def make_1hz(var: Variable) -> Variable:
     Variable
     """
     var = var.copy(deep=True)
-    var.dimensions = [dimensions.Time]
+    var.dimensions = ['Time']
     var.attributes.frequency = 1
     return var
 

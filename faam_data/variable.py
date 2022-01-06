@@ -14,7 +14,7 @@ class VariableMeta(BaseModel):
 
 class Variable(BaseModel):
     meta: VariableMeta
-    dimensions: List[Dimension]
+    dimensions: List[str]
     attributes: VariableAttributes
 
     @property

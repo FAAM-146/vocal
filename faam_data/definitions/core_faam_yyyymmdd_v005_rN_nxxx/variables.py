@@ -11,7 +11,7 @@ variables = [
             name='Time',
             datatype=Float32
         ),
-        dimensions=[Time],
+        dimensions=['Time'],
         attributes=variable_attribute_factory(
             long_name='Time',
             units='seconds since 1970-01-01T00:00:00Z',
@@ -27,7 +27,7 @@ variables = [
             name='LAT_GIN',
             datatype=Float32
         ),
-        dimensions=[Time, sps32],
+        dimensions=['Time', 'sps32'],
         attributes=variable_attribute_factory(
             long_name='Latitude from GIN',
             units='degree_north',
@@ -43,7 +43,7 @@ variables = [
             name='LON_GIN',
             datatype=Float32
         ),
-        dimensions=[Time, sps32],
+        dimensions=['Time', 'sps32'],
         attributes=variable_attribute_factory(
             long_name='Longitude from GIN',
             units='degree_east',
@@ -59,7 +59,7 @@ variables = [
             name='ALT_GIN',
             datatype=Float32
         ),
-        dimensions=[Time, sps32],
+        dimensions=['Time', 'sps32'],
         attributes=variable_attribute_factory(
             long_name='Altitude from GIN',
             units='m',
@@ -75,7 +75,7 @@ variables = [
             name='TAT_DI_R',
             datatype=Float32,
         ),
-        dimensions=[Time, sps32],
+        dimensions=['Time', 'sps32'],
         attributes=variable_attribute_factory(
             long_name=DerivedString,
             standard_name='air_temperature',
@@ -91,7 +91,7 @@ variables = [
             name='TAT_ND_R',
             datatype=Float32,
         ),
-        dimensions=[Time, sps32],
+        dimensions=['Time', 'sps32'],
         attributes=variable_attribute_factory(
             long_name=DerivedString,
             standard_name='air_temperature',
