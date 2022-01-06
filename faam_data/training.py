@@ -6,6 +6,7 @@ import netCDF4
 import numpy as np
 import numpy.typing
 import pydantic
+from pydantic.types import NoneStr
 
 TIME_START = 0
 TIME_END = 3601
@@ -109,6 +110,29 @@ class VariableTrainingData:
         scale = np.round(10 * np.random.random())
         x = np.linspace(0, 10*np.pi, num=NT*self.freq)
         return (scale * np.sin(x)).reshape((NT, self.freq))
+
+    def _get_dummy_flag(self) -> numpy.typing.ArrayLike:
+        """
+        Get dummy flag data
+        """
+        flags = None
+
+        try:
+            flags = self.attrs.flag_values
+        except AttributeError:
+            pass
+
+        try:
+            flags = self.attrs.flag_masks
+        except AttributeError:
+            pass
+
+        if flags is None:
+            raise ValueError(
+                'Flag variable does not include flag_values or flag_masks'
+            )
+
+        return flags[0] * np.ones((NT, self.freq))
 
     def populate(self) -> None:
         """
