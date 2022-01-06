@@ -1,5 +1,6 @@
 import netCDF4
 import numpy as np
+import numpy.typing
 from pydantic import BaseModel, Field
 from typing import List
 from .training import variable_data_hooks, VariableTrainingData
@@ -17,7 +18,7 @@ class Variable(BaseModel):
     attributes: VariableAttributes
 
     @property
-    def np_type(self) -> np.dtype:
+    def np_type(self) -> numpy.typing.DTypeLike:
         dtypes = {
             '<int32>': np.int32,
             '<int64>': np.int64,
