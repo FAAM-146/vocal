@@ -1,0 +1,40 @@
+Dataset:
+  meta:
+    file_pattern: 'faam_test.nc'
+  dimensions:
+    - name: Time
+      size: null
+    - name: sps32
+      size: 32
+  attributes:
+    title: This is a new dataset
+  groups:
+    - meta:
+        name: TestGroup
+      variables:
+        - meta:
+            name: GROUP_VAR
+            datatype: <float32>
+          dimensions:
+            - Time
+          attributes:
+            long_name: A variable from a group
+            units: G
+            comment: This is a group variable
+            frequency: 1
+            _FillValue: -999
+      attributes:
+        comment: This is a group
+  variables:
+    - meta:
+        name: TAT_DI_R
+        datatype: <float32>
+      dimensions: 
+        - Time
+        - sps32
+      attributes:
+        _FillValue: -9999
+        long_name: Deiced Rosemount temperature
+        units: K
+        frequency: 32
+      

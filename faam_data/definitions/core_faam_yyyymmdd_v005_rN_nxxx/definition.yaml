@@ -1,0 +1,28 @@
+Dataset:
+  meta:
+    file_pattern: core_faam_[0-9]{8}_v005_r[0-9]+_[a-z][0-9]{3}
+  dimensions:
+    - name: Time
+      size: null
+    - name: sps32
+      size: 32
+  variables:
+    - meta:
+        name: Time
+        datatype: <int32>
+      dimensions: 
+        - Time
+      attributes:
+        coverage_content_type: coordinate
+    - meta:
+        name: TAT_DI_R
+        datatype: <float32>
+      dimensions:
+        - Time
+        - sps32
+      attributes:
+        _FillValue: -9999.
+        frequency: 32
+        standard_name: temperature
+  attributes: {}
+      
