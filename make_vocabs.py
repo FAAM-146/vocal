@@ -178,7 +178,7 @@ class DatasetDiscoverer:
                 continue
             
             name = i.name
-            full_path = '.'.join((self.module_path, name, 'dataset'))
+            full_path = '.'.join((self.module_path, name))
             module = importlib.import_module(full_path)
             dataset = getattr(module, 'dataset')
 
