@@ -35,8 +35,8 @@ class Variable(BaseModel):
         var = nc.createVariable(
             self.meta.name,
             self.np_type,
-            [i.name for i in self.dimensions],
-            fill_value=self.attributes._FillValue
+            self.dimensions,
+            fill_value=self.attributes.FillValue
         )
 
         VariableTrainingData(var, self.attributes).populate()
@@ -50,7 +50,7 @@ class Variable(BaseModel):
             if value is None:
                 continue
 
-            if attr == '_FillValue':
+            if attr in ('_FillValue', 'FillValue'):
                 continue
 
             setattr(var, attr, value)
