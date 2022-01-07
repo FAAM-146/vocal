@@ -20,7 +20,7 @@ class Group(BaseModel):
 
     meta: GroupMeta
     attributes: GroupAttributes
-    dimensions: list[Dimension]
+    dimensions: Optional[list[Dimension]]
     groups: Optional[list[Group]]
     variables: list[Variable]
     
