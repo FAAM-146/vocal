@@ -22,7 +22,7 @@ class Dataset(BaseModel):
     meta: DatasetMeta
     attributes: GlobalAttributes
     dimensions: list[Dimension]
-    groups: Optional[Group]
+    groups: Optional[list[Group]]
     variables: list[Variable]
 
     def to_test_nc(self) -> None:
@@ -33,6 +33,10 @@ class Dataset(BaseModel):
 
             for var in self.variables:
                 var.to_nc_container(nc)
+
+            if self.groups is not None:
+                for group in self.groups:
+                    group.to_nc_container(nc)
 
             for attr, value in self.attributes:
                 try:
@@ -54,4 +58,12 @@ class Dataset(BaseModel):
                 except AttributeError:
                     pass
 
-                setattr(nc, attr, value)
+                try:
+                    attr = attr.decode()
+                except AttributeError:
+                    pass
+
+                try:
+                    setattr(nc, attr, value)
+                except TypeError:
+                    setattr(nc, attr, str(value))
