@@ -276,7 +276,7 @@ class BasicDatasetValidator:
         """
         for ds in DatasetDiscoverer().discover():
             try:
-                Dataset(**ds[1].dict())
+                Dataset(**ds[1].dict(by_alias=True))
             except ValidationError as err:
                 self.errors = True
                 print(f'Error in dataset: {ds[0]}')
