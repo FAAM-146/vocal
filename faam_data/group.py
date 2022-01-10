@@ -3,9 +3,9 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from .attributes import GroupAttributes
 from .dimension import Dimension
 from .variable import Variable
+from .attributes import AttributesSet
 
 
 class GroupMeta(BaseModel):
@@ -19,7 +19,7 @@ class Group(BaseModel):
         title = 'FAAM Group Schema'
 
     meta: GroupMeta
-    attributes: GroupAttributes
+    attributes: AttributesSet
     dimensions: Optional[list[Dimension]]
     groups: Optional[list[Group]]
     variables: list[Variable]

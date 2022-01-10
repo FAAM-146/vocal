@@ -7,7 +7,7 @@ import netCDF4
 import numpy as np
 import pydantic
 
-from faam_data.schema_types import np_invert
+from .schema_types import np_invert
 
 NCContainer = Union[netCDF4.Dataset, netCDF4.Group]
 

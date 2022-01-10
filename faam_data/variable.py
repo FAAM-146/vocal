@@ -4,8 +4,8 @@ import numpy.typing
 from pydantic import BaseModel, Field
 from typing import List
 from .training import variable_data_hooks, VariableTrainingData
-from .attributes import VariableAttributes
-from .dimension import Dimension
+from .attributes import AttributesSet
+
 
 class VariableMeta(BaseModel):
     datatype: str = Field(description='The type of the data')
@@ -15,7 +15,7 @@ class VariableMeta(BaseModel):
 class Variable(BaseModel):
     meta: VariableMeta
     dimensions: List[str]
-    attributes: VariableAttributes
+    attributes: AttributesSet
 
     @property
     def np_type(self) -> numpy.typing.DTypeLike:

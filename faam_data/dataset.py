@@ -5,7 +5,7 @@ import netCDF4
 from pydantic import BaseModel, Field
 
 from .dimension import Dimension
-from .attributes import GlobalAttributes
+from .attributes import AttributesSet
 from .group import Group
 from .variable import Variable
 from .training import global_data_hooks
@@ -20,12 +20,12 @@ class Dataset(BaseModel):
         title = 'FAAM Dataset Schema'
 
     meta: DatasetMeta
-    attributes: GlobalAttributes
+    attributes: AttributesSet
     dimensions: list[Dimension]
     groups: Optional[list[Group]]
     variables: list[Variable]
 
-    def to_test_nc(self) -> None:
+    def create_example_file(self) -> None:
         nc_filename = 'test.nc'
         with netCDF4.Dataset(nc_filename, 'w') as nc:
             for dim in self.dimensions:

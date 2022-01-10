@@ -6,7 +6,6 @@ import netCDF4
 import numpy as np
 import numpy.typing
 import pydantic
-from pydantic.types import NoneStr
 
 TIME_START = 0
 TIME_END = 3601
