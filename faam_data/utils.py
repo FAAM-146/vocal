@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import copy
 import os
-from typing import Any, Iterator, Mapping
+from typing import Any, Iterator, Mapping, TYPE_CHECKING
 from dataclasses import dataclass
 from contextlib import contextmanager
 
 import pydantic
 import yaml
+
+if TYPE_CHECKING:
+    from .core import DataModel
 
 
 @dataclass
@@ -77,7 +82,7 @@ def dataset_from_partial_yaml(
     variable_template: Mapping,
     globals_template: Mapping,
     group_template: Mapping,
-    model: Any,                 # TODO: This is a DataModel. Need a r/f to fix import
+    model: DataModel,
     construct: bool = False
 ) -> pydantic.BaseModel:
 
