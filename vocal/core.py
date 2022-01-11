@@ -147,4 +147,6 @@ class ProductCollection:
             yield name, defn.construct()
 
     def write_vocabularies(self):
+        for defn in self.definitions:
+            defn.validate()
         self.vocab_creator.create_vocabulary()  
