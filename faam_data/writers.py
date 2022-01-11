@@ -43,7 +43,7 @@ class BaseWriter(ABC):
         """
         _filename = f'{self.name}.json'
         with self.folder_manager.in_folder():
-            mode = 'w' if not os.path.exists(_filename) else 'a'
+            mode = 'w'
             with open(f'{self.name}.json', mode) as f:
                 f.write(self._json)
 
