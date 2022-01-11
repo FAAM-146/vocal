@@ -1,3 +1,5 @@
+import warnings
+
 from dataclasses import dataclass
 from functools import partial
 from typing import Union
@@ -42,9 +44,9 @@ def geospatial(nc: netCDF4.Dataset, axis: str, extrema: str) -> Union[float, Non
         _val = func([func(nc[var][:]), _val])
 
     if _val == extreme_value:
-        # This isn't right. geospatial_* attributes are required by the standard.
-        # Either raise an error, or fall back on example data
-        return None
+        _dummy_val = 0 if extrema == 'min' else 10
+        warnings.warn(f'Unable to infer {extrema} geospatial bound on axis {axis}, using {_dummy_val}')
+        return _dummy_val
 
     return _val
 
