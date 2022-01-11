@@ -1,4 +1,5 @@
 import os
+import json
 
 from dataclasses import dataclass, field
 from typing import Any, Container, Union
@@ -10,6 +11,20 @@ import pydantic
 from .schema_types import np_invert
 
 NCContainer = Union[netCDF4.Dataset, netCDF4.Group]
+
+
+class NumpyEncoder(json.JSONEncoder):
+    """
+    A JSON encoder which wont fall over with basic numpy types we're
+    likely to get from netCDF
+    """
+    def default(self, obj):
+        if isinstance(obj, (np.int16, np.int32, np.int64)):
+            return int(obj)
+        if isinstance(obj, (np.float16, np.float32, np.float64)):
+            return float(obj)
+        return super().default(obj)
+
 
 @dataclass
 class NetCDFReader:
@@ -98,6 +113,14 @@ class NetCDFReader:
                 'file_pattern': os.path.basename(self.ncfile)
             }
             self.ncdict.update(self._read_container(nc))
+
+    @property
+    def json(self):
+        return json.dumps(self.ncdict, cls=NumpyEncoder)
+
+    @property
+    def dict(self):
+        return self.ncdict
 
     def to_model(
         self, model: type[pydantic.BaseModel],
