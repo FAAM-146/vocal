@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 from dataclasses import dataclass, field
-from typing import Iterator, Mapping, Optional, Protocol, Type
+from typing import Iterator, Mapping, Optional, Protocol, Tuple, Type
 import pydantic
 
 from pydantic.error_wrappers import ValidationError
@@ -44,9 +44,9 @@ class DataModel:
 
     def register_attributes_module(self, module: HasAttributesMembers) -> None:
         self.register_attributes(
-            variable_attributes=module.VariableAttributes,
-            group_attributes=module.GroupAttributes,
-            global_attributes=module.GlobalAttributes
+            variable_attributes=module.VariableAttributes,  # type: ignore
+            group_attributes=module.GroupAttributes,        # type: ignore
+            global_attributes=module.GlobalAttributes       # type: ignore
         )
 
     def register_attributes(
@@ -59,15 +59,15 @@ class DataModel:
         # This is hideous, hacky, and probably broken. Totally blaming Graeme
         # for making me generalize this :)
         class _Variable(Variable):
-            attributes: variable_attributes
+            attributes: variable_attributes # type: ignore
         class _Group(Group):
-            attributes: group_attributes
-            variables: list[_Variable]
-            groups: list[_Group]
+            attributes: group_attributes # type: ignore
+            variables: list[_Variable] # type: ignore
+            groups: list[_Group] # type: ignore
         class _Dataset(Dataset):
-            attributes: global_attributes
-            variables: list[_Variable]
-            groups: Optional[list[_Group]]
+            attributes: global_attributes # type: ignore
+            variables: list[_Variable]  # type: ignore
+            groups: Optional[list[_Group]] # type: ignore
         _Group.update_forward_refs(**locals())
         _Dataset.update_forward_refs(**locals())
         _Variable.update_forward_refs(**locals())
@@ -77,7 +77,7 @@ class DataModel:
         self._Variable = _Variable
 
 _templates = {}
-def register_template(name: str, mapping: Mapping) -> None:
+def register_template(name: str, mapping: dict) -> None:
     if name not in ('group', 'variable', 'globals'):
         raise ValueError('Invalid name')
     _templates[name] = mapping
@@ -88,10 +88,10 @@ class ProductDefinition:
     path: str
     model: DataModel
 
-    def __call__(self) -> Dataset:
+    def __call__(self) -> pydantic.BaseModel:
         return self._from_yaml(construct=False)
 
-    def construct(self) -> Dataset:
+    def construct(self) -> pydantic.BaseModel:
         return self._from_yaml(construct=True)
 
     def _from_yaml(self, construct: bool=True) -> pydantic.BaseModel:
@@ -105,7 +105,7 @@ class ProductDefinition:
         )
 
     def create_example_file(self) -> None:
-        self().create_example_file()
+        self().create_example_file() # type: ignore
 
     def validate(self) -> None:
         errors = False
@@ -141,7 +141,7 @@ class ProductCollection:
         self.definitions.append(product)
 
     @property
-    def datasets(self) -> Iterator[DataModel]:
+    def datasets(self) -> Iterator[Tuple[str, pydantic.BaseModel]]:
         for defn in self.definitions:
             name = os.path.basename(defn.path.split('.')[0])
             yield name, defn.construct()

@@ -79,12 +79,15 @@ class FolderManager:
 def dataset_from_partial_yaml(
     
     yamlfile: str,
-    variable_template: Mapping,
-    globals_template: Mapping,
-    group_template: Mapping,
+    variable_template: dict,
+    globals_template: dict,
+    group_template: dict,
     model: DataModel,
     construct: bool = False
 ) -> pydantic.BaseModel:
+
+    if model.model is None:
+        raise ValueError('Pydantic model has not been defined')
 
     def parse_definition(defn: dict, ctype: str='dataset') -> dict:    
         for var in defn['variables']:

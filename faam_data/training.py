@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from functools import partial
 from typing import Union
-import netCDF4
+import netCDF4 # type: ignore
 
 import numpy as np
 import numpy.typing
@@ -86,7 +86,7 @@ class VariableTrainingData:
         """
         Shortcut to variable frequency
         """
-        return self.attrs.frequency
+        return self.attrs.frequency # type: ignore
 
     @property
     def axis(self) -> Union[str, None]:
@@ -117,12 +117,12 @@ class VariableTrainingData:
         flags = None
 
         try:
-            flags = self.attrs.flag_values
+            flags = self.attrs.flag_values # type: ignore
         except AttributeError:
             pass
 
         try:
-            flags = self.attrs.flag_masks
+            flags = self.attrs.flag_masks # type: ignore
         except AttributeError:
             pass
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional
-import netCDF4
+import netCDF4 # type: ignore
 
 from pydantic import BaseModel, Field
 
@@ -55,11 +55,6 @@ class Dataset(BaseModel):
                         except KeyError:
                             print(self.schema())
                             raise
-                except AttributeError:
-                    pass
-
-                try:
-                    attr = attr.decode()
                 except AttributeError:
                     pass
 

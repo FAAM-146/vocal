@@ -1,4 +1,4 @@
-import netCDF4
+import netCDF4 # type: ignore
 from pydantic import BaseModel
 from typing import Union
 

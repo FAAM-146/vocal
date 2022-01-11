@@ -1,4 +1,4 @@
-import netCDF4
+import netCDF4 # type: ignore
 import numpy as np
 import numpy.typing
 from pydantic import BaseModel, Field
@@ -36,7 +36,7 @@ class Variable(BaseModel):
             self.meta.name,
             self.np_type,
             self.dimensions,
-            fill_value=self.attributes.FillValue
+            fill_value=self.attributes.FillValue # type: ignore
         )
 
         VariableTrainingData(var, self.attributes).populate()

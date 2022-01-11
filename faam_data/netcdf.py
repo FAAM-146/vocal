@@ -1,9 +1,9 @@
 import os
 
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Any, Container, Union
 
-import netCDF4
+import netCDF4 # type: ignore
 import numpy as np
 import pydantic
 
@@ -62,7 +62,7 @@ class NetCDFReader:
         Group)
         """
 
-        ret_dict = {}
+        ret_dict: dict[str, Any] = {}
         ret_dict['dimensions'] = []
         ret_dict['variables'] = []
         ret_dict['attributes'] = {}
