@@ -4,6 +4,7 @@ import os
 
 from dataclasses import dataclass, field
 from typing import Iterator, Mapping, Optional, Protocol, Type
+import pydantic
 
 from pydantic.error_wrappers import ValidationError
 
@@ -19,6 +20,11 @@ class SupportsCreateVocabulary(Protocol):
     def create_vocabulary(self) -> None:
         ...
 
+class HasAttributesMembers(Protocol):
+    GlobalAttributes: pydantic.BaseModel
+    VariableAttributes: pydantic.BaseModel
+    GroupAttributes: pydantic.BaseModel
+
 
 @dataclass
 class DataModel:
@@ -27,15 +33,27 @@ class DataModel:
     specification of custom attribute collections as types.
     """
 
+    attributes_module: Optional[HasAttributesMembers] = None
     model: Optional[Type[Dataset]] = None
     _Group: Optional[Type[Group]] = None
     _Variable: Optional[Type[Variable]] = None
 
+    def __post_init__(self):
+        if self.attributes_module is not None:
+            self.register_attributes_module(self.attributes_module)
+
+    def register_attributes_module(self, module: HasAttributesMembers) -> None:
+        self.register_attributes(
+            variable_attributes=module.VariableAttributes,
+            group_attributes=module.GroupAttributes,
+            global_attributes=module.GlobalAttributes
+        )
+
     def register_attributes(
         self,
-        variable_attributes: AttributesSet,
-        group_attributes: AttributesSet,
-        global_attributes: AttributesSet,
+        variable_attributes: Type[AttributesSet],
+        group_attributes: Type[AttributesSet],
+        global_attributes: Type[AttributesSet],
     ) -> None:
         
         # This is hideous, hacky, and probably broken. Totally blaming Graeme
@@ -76,7 +94,7 @@ class ProductDefinition:
     def construct(self) -> Dataset:
         return self._from_yaml(construct=True)
 
-    def _from_yaml(self, construct: bool=True) -> Dataset:
+    def _from_yaml(self, construct: bool=True) -> pydantic.BaseModel:
 
         return dataset_from_partial_yaml(
             self.path, variable_template=_templates['variable'],
