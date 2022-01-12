@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 from dataclasses import dataclass, field
-from typing import Iterator, Mapping, Optional, Protocol, Tuple, Type
+from typing import Any, Iterator, Optional, Protocol, Tuple, Type
 import pydantic
 
 from pydantic.error_wrappers import ValidationError
@@ -16,6 +16,10 @@ from .group import Group
 from .dataset import Dataset
 from .netcdf import NetCDFReader
 
+ATTRIBUTE_TYPES = ('group', 'variable', 'globals')
+
+_templates = {i: {} for i in ATTRIBUTE_TYPES}
+
 
 class SupportsCreateVocabulary(Protocol):
     def create_vocabulary(self) -> None:
@@ -25,6 +29,11 @@ class HasAttributesMembers(Protocol):
     GlobalAttributes: pydantic.BaseModel
     VariableAttributes: pydantic.BaseModel
     GroupAttributes: pydantic.BaseModel
+
+class HasRequiredAttributesMembers(Protocol):
+    default_globals_attrs: dict[str, Any]
+    default_group_attrs: dict[str, Any]
+    default_variable_attrs: dict[str, Any]
 
 
 @dataclass
@@ -80,11 +89,19 @@ class DataModel:
         self._Group = _Group
         self._Variable = _Variable
 
-_templates = {}
-def register_template(name: str, mapping: dict) -> None:
-    if name not in ('group', 'variable', 'globals'):
+
+def register_defaults(name: str, mapping: dict) -> None:
+    f"""
+    Register a dictionary of default values
+    """
+    if name not in ATTRIBUTE_TYPES:
         raise ValueError('Invalid name')
     _templates[name] = mapping
+
+def register_defaults_module(module: HasRequiredAttributesMembers) -> None:
+    register_defaults('globals', getattr(module, 'default_global_attrs'))
+    register_defaults('group', getattr(module, 'default_group_attrs'))
+    register_defaults('variable', getattr(module, 'default_variable_attrs'))
 
 @dataclass
 class ProductDefinition:
