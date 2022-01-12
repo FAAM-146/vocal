@@ -27,7 +27,7 @@ def is_in_factory(collection: Collection) -> Callable:
 # Shortcut defining a validator with allow_reuse set as True
 re_validator = functools.partial(validator, allow_reuse=True)
 
-def substitute_placeholders(cls, values: list) -> list:
+def substitute_placeholders(cls, values: dict) -> dict:
     """
     A root validator, which should be called with pre=True, which turns
     attributes with placeholders (e.g. attr: <str: derived_from_file>)
