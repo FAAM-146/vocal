@@ -14,6 +14,7 @@ from .writers import VocabularyCreator
 from .variable import Variable
 from .group import Group
 from .dataset import Dataset
+from .netcdf import NetCDFReader
 
 
 class SupportsCreateVocabulary(Protocol):
@@ -41,6 +42,9 @@ class DataModel:
     def __post_init__(self):
         if self.attributes_module is not None:
             self.register_attributes_module(self.attributes_module)
+
+    def check_file(self, filename: str) -> pydantic.BaseModel:
+        return NetCDFReader(filename).to_model(self.model)
 
     def register_attributes_module(self, module: HasAttributesMembers) -> None:
         self.register_attributes(
