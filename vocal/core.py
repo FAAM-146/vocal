@@ -11,9 +11,9 @@ from pydantic.error_wrappers import ValidationError
 from .utils import FolderManager, dataset_from_partial_yaml
 from .attributes import AttributesSet
 from .writers import VocabularyCreator
-from .variable import Variable
-from .group import Group
-from .dataset import Dataset
+from .variable import Variable as _Variable
+from .group import Group as _Group
+from .dataset import Dataset as _Dataset
 from .netcdf import NetCDFReader
 
 ATTRIBUTE_TYPES = ('group', 'variable', 'globals')
@@ -44,9 +44,9 @@ class DataModel:
     """
 
     attributes_module: Optional[HasAttributesMembers] = None
-    model: Optional[Type[Dataset]] = None
-    _Group: Optional[Type[Group]] = None
-    _Variable: Optional[Type[Variable]] = None
+    model: Optional[Type[_Dataset]] = None
+    _Group: Optional[Type[_Group]] = None
+    _Variable: Optional[Type[_Variable]] = None
 
     def __post_init__(self):
         if self.attributes_module is not None:
@@ -71,23 +71,23 @@ class DataModel:
         
         # This is hideous, hacky, and probably broken. Totally blaming Graeme
         # for making me generalize this :)
-        class _Variable(Variable):
+        class Variable(_Variable):
             attributes: variable_attributes # type: ignore
-        class _Group(Group):
+        class Group(_Group):
             attributes: group_attributes # type: ignore
             variables: list[_Variable] # type: ignore
-            groups: list[_Group] # type: ignore
-        class _Dataset(Dataset):
+            groups: Optional[list[_Group]] # type: ignore
+        class Dataset(_Dataset):
             attributes: global_attributes # type: ignore
             variables: list[_Variable]  # type: ignore
             groups: Optional[list[_Group]] # type: ignore
-        _Group.update_forward_refs(**locals())
-        _Dataset.update_forward_refs(**locals())
-        _Variable.update_forward_refs(**locals())
+        Group.update_forward_refs(**locals())
+        Dataset.update_forward_refs(**locals())
+        Variable.update_forward_refs(**locals())
 
-        self.model = _Dataset
-        self._Group = _Group
-        self._Variable = _Variable
+        self.model = Dataset
+        self._Group = Group
+        self._Variable = Variable
 
 
 def register_defaults(name: str, mapping: dict) -> None:
