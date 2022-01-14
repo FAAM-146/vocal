@@ -101,16 +101,17 @@ class VariableTrainingData:
         """
         Get values for a time variable
         """
-        time = np.arange(TIME_START, TIME_END, 1 / self.freq)
+        time = np.arange(TIME_START, TIME_END)
         return time
 
     def _get_dummy_data(self) -> numpy.typing.ArrayLike:
         """
         Get dummy sinusoidal data for standard data variables
         """
+        size = self._get_data_size()
         scale = np.round(10 * np.random.random())
-        x = np.linspace(0, 10*np.pi, num=NT*self.freq)
-        return (scale * np.sin(x)).reshape((NT, self.freq))
+        x = np.linspace(0, 10*np.pi, num=np.prod(size))
+        return (scale * np.sin(x)).reshape(size)
 
     def _get_dummy_flag(self) -> numpy.typing.ArrayLike:
         """
@@ -133,13 +134,23 @@ class VariableTrainingData:
                 'Flag variable does not include flag_values or flag_masks'
             )
 
-        return flags[0] * np.ones((NT, self.freq))
+        return flags[0] * np.ones(self._get_data_size())
+
+    def _get_data_size(self) -> tuple:
+        sizes = []
+        for dim in self.var.get_dims():
+            if dim.isunlimited():
+                sizes.append(NT)
+            else:
+                sizes.append(dim.size)
+
+        return tuple(sizes)
 
     def populate(self) -> None:
         """
         Populate the provided variable with data.
         """
-    
+
         if self.axis == 'T':
             self.var[:] = self._get_time()
             return
