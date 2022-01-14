@@ -47,6 +47,8 @@ def create_vocabs(args: Namespace) -> None:
     os.chdir(output_dir)
     try:
         collection.write_vocabularies()
+    except Exception as e:
+        raise RuntimeError('Failed to create vocabularies') from e
     finally:
         os.chdir(cwd)
         
@@ -72,7 +74,7 @@ def main() -> None:
         help='The directory to write the vocabularies to.'
     )
 
-    
+
     args = parser.parse_args(sys.argv[2:])
 
     create_vocabs(args)
