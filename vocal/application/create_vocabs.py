@@ -13,7 +13,7 @@ def create_vocabs(args: Namespace) -> None:
     project = args.project
     version = args.version
     output_dir = args.output_dir
-    
+
     sys.path.insert(0, project)
     # Use importlib to prevent pylance moaning...
     try:
@@ -49,8 +49,7 @@ def create_vocabs(args: Namespace) -> None:
         os.chdir(cwd)
         
 
-
-def main():
+def main() -> None:
     parser = parser_factory(
         name='create_vocabs',
         description='Create versioned JSON vocabularies for a vocal project'
@@ -62,12 +61,12 @@ def main():
     )
 
     parser.add_argument(
-        '-v', type=str, required=True, metavar='VERSION', dest='version',
+        '-v', '--version', type=str, required=True, metavar='VERSION', dest='version',
         help='The vocabulary version, e.g. 1.0'
     )
 
     parser.add_argument(
-        '-o', type=str, default='.', metavar='OUTPUT_DIR', dest='output_dir',
+        '-o', '--output-dir', type=str, default='.', metavar='OUTPUT_DIR', dest='output_dir',
         help='The directory to write the vocabularies to.'
     )
 
