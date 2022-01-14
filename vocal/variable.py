@@ -32,11 +32,22 @@ class Variable(BaseModel):
 
     def to_nc_container(self, nc: netCDF4.Dataset) -> netCDF4.Variable:
         print(f'creating variable {self.meta.name}')
+
+        # Seems to be some inconsistent behaviour with the alias, try both
+        # before failing
+        try:
+            fv = self.attributes.FillValue
+        except AttributeError:
+            try:
+                fv = self.attributes._FillValue
+            except AttributeError:
+                fv = None
+
         var = nc.createVariable(
             self.meta.name,
             self.np_type,
             self.dimensions,
-            fill_value=self.attributes.FillValue # type: ignore
+            fill_value=fv # type: ignore
         )
 
         VariableTrainingData(var, self.attributes).populate()
