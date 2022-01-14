@@ -15,14 +15,15 @@ def create_vocabs(args: Namespace) -> None:
     output_dir = args.output_dir
     
     sys.path.insert(0, project)
+    # Use importlib to prevent pylance moaning...
     try:
-        import attributes
-    except ImportError as e:
+        attributes = importlib.import_module('attributes')
+    except ModuleNotFoundError as e:
         raise RuntimeError('Unable to import project attributes') from e
 
     try:
-        import defaults
-    except ImportError as e:
+        defaults = importlib.import_module('defaults')
+    except ModuleNotFoundError as e:
         raise RuntimeError('Unable to import project defaults') from e
 
     register_defaults_module(defaults)
