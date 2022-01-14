@@ -15,7 +15,7 @@ def check_against_standard(model: DataModel, filename: str) -> bool:
     print(f'Checking {filename} against standard... ', end='')
     nc = NetCDFReader(filename)
     try:
-        nc.to_model(model.model)
+        nc.to_model(model.model) # type: ignore
     except ValidationError as err:
         print('FAIL!')
         for e in err.errors():

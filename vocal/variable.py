@@ -36,10 +36,10 @@ class Variable(BaseModel):
         # Seems to be some inconsistent behaviour with the alias, try both
         # before failing
         try:
-            fv = self.attributes.FillValue
+            fv = self.attributes.FillValue # type: ignore
         except AttributeError:
             try:
-                fv = self.attributes._FillValue
+                fv = self.attributes._FillValue # type: ignore
             except AttributeError:
                 fv = None
 

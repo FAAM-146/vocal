@@ -18,7 +18,7 @@ from .netcdf import NetCDFReader
 
 ATTRIBUTE_TYPES = ('group', 'variable', 'globals')
 
-_templates = {i: {} for i in ATTRIBUTE_TYPES}
+_templates: dict[str, Any] = {i: {} for i in ATTRIBUTE_TYPES}
 
 
 class SupportsCreateVocabulary(Protocol):
@@ -53,7 +53,7 @@ class DataModel:
             self.register_attributes_module(self.attributes_module)
 
     def check_file(self, filename: str) -> pydantic.BaseModel:
-        return NetCDFReader(filename).to_model(self.model)
+        return NetCDFReader(filename).to_model(self.model) # type: ignore
 
     def register_attributes_module(self, module: HasAttributesMembers) -> None:
         self.register_attributes(
