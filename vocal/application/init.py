@@ -1,3 +1,5 @@
+"""Initialise a vocal project."""
+
 from argparse import ArgumentParser, Namespace
 import os
 import sys
