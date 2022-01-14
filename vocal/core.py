@@ -125,8 +125,8 @@ class ProductDefinition:
             construct=construct
         )
 
-    def create_example_file(self) -> None:
-        self().create_example_file() # type: ignore
+    def create_example_file(self, nc_filename: str) -> None:
+        self().create_example_file(nc_filename) # type: ignore
 
     def validate(self) -> None:
         errors = False

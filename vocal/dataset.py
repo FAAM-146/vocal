@@ -25,8 +25,8 @@ class Dataset(BaseModel):
     groups: Optional[list[Group]]
     variables: list[Variable]
 
-    def create_example_file(self) -> None:
-        nc_filename = 'test.nc'
+    def create_example_file(self, nc_filename: str) -> None:
+        
         with netCDF4.Dataset(nc_filename, 'w') as nc:
             for dim in self.dimensions:
                 dim.to_nc_container(nc)
