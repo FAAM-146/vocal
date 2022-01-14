@@ -19,11 +19,11 @@ def get_descriptions() -> list:
     ]
 
 def print_help_and_exit(code: int=0) -> None:
-    print('Available commands are:\n')
+    print('\nAvailable commands are:\n')
     for cmd, desc in zip(commands, get_descriptions()):
         print(f'* {cmd:15s} - {desc}')
     print()
-    print('try "vocal <command> -h" for help')
+    print('try "vocal <command> -h" for help\n')
     sys.exit(code)
 
 def get_command() -> str:
