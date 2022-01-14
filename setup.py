@@ -7,7 +7,7 @@ setup(
     author='Dave Sproson',
     author_email='dave.sproson@faam.ac.uk',
     url='https://github.com/FAAM-146/vocal',
-    packages=['vocal'],
+    packages=['vocal', 'vocal.application'],
     scripts=['scripts/vocal'],
     install_requires=[
         'netcdf4', 'pydantic', 'pyyaml', 'numpy'
