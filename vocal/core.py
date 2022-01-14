@@ -164,7 +164,7 @@ class ProductCollection:
     @property
     def datasets(self) -> Iterator[Tuple[str, pydantic.BaseModel]]:
         for defn in self.definitions:
-            name = os.path.basename(defn.path.split('.')[0])
+            name = os.path.basename(defn.path).split('.')[0]
             yield name, defn.construct()
 
     def write_vocabularies(self):
