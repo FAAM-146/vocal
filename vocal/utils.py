@@ -113,6 +113,6 @@ def dataset_from_partial_yaml(
         y = yaml.load(f, Loader=yaml.Loader)
 
         if construct:
-            return model.model.construct(**parse_definition(y['Dataset']))
+            return model.model.construct(**parse_definition(y))
         
-        return model.model(**parse_definition(y['Dataset']))
+        return model.model(**parse_definition(y))
