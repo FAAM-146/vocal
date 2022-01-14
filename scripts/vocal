@@ -12,9 +12,18 @@ E_CMDLINE = 2
 E_GENERAL = 1
 
 
+def get_descriptions() -> list:
+    return [
+        importlib.import_module('.'.join((APPLICATION_PATH, cmd))).__doc__
+        for cmd in commands
+    ]
+
 def print_help_and_exit(code: int=0) -> None:
-    print('Available commands are: ' + ','.join(commands))
-    print('try "vocal <cmd> -h" for help')
+    print('Available commands are:\n')
+    for cmd, desc in zip(commands, get_descriptions()):
+        print(f'* {cmd:15s} - {desc}')
+    print()
+    print('try "vocal <command> -h" for help')
     sys.exit(code)
 
 def get_command() -> str:
@@ -38,8 +47,6 @@ def main() -> None:
         sys.exit(E_GENERAL)
     
     sys.exit(0)
-
-    
 
 if __name__ == '__main__':
     main()
