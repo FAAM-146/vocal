@@ -17,7 +17,7 @@ class DatasetMeta(BaseModel):
 
 class Dataset(BaseModel):
     class Config:
-        title = 'FAAM Dataset Schema'
+        title = 'Dataset Schema'
 
     meta: DatasetMeta
     attributes: AttributesSet
