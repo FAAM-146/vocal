@@ -1,3 +1,5 @@
+"""Create versioned JSON vocabularies for a vocal project"""
+
 import glob
 import os
 import importlib
