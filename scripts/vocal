@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import argparse
+import os
 import sys
 import importlib
 from types import ModuleType
@@ -40,9 +40,14 @@ def get_prog_module(cmd: str) -> ModuleType:
         print_help_and_exit(code=E_CMDLINE)
 
 def main() -> None:
+    
+    debug = os.environ.get('VOCAL_DEBUG', 'false').lower() == 'true'
+
     try:
         get_prog_module(get_command()).main()
     except Exception as e:
+        if debug:
+            raise
         print(f'Error: {e.args[0]}')
         sys.exit(E_GENERAL)
     
