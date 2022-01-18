@@ -117,7 +117,5 @@ class ProductCollection:
 
     def write_vocabularies(self):
         for defn in self.definitions:
-            # print(defn)
             defn.validate()
-        # print('*'*100)
         self.vocab_creator.create_vocabulary()  

@@ -87,8 +87,6 @@ def dataset_from_partial_yaml(
         raise ValueError('Pydantic model has not been defined')
 
     def parse_definition(defn: dict, ctype: str='dataset') -> dict:   
-        print(ctype)
-        print(defn)
 
         for var in defn['variables']:
                         
