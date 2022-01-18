@@ -364,7 +364,7 @@ class ProductChecker:
 
         self.compare_attributes(d['attributes'], f['attributes'], path=path)
         self.compare_variables(d['variables'], f['variables'], path=path)
-        self.compare_groups(d['groups'], f['groups'], path=path)
+        self.compare_groups(d.get('groups', []), f.get('groups', []), path=path)
 
     def load_definition(self) -> dict:
         """
