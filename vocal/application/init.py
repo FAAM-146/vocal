@@ -66,7 +66,7 @@ class DatasetMeta(BaseModel):
     file_pattern: str = Field(description='Canonical filename pattern for this dataset')
 
 
-class Dataset(BaseModel):
+class Dataset(BaseModel, DatasetNetCDFMixin):
     class Config:
         title = 'Dataset Schema'
 
@@ -82,6 +82,7 @@ from __future__ import annotations
 from typing import Optional
 
 from pydantic import BaseModel
+from vocal.netcdf.mixins import GroupNetCDFMixin
 
 from attributes import GroupAttributes
 
@@ -94,7 +95,7 @@ class GroupMeta(BaseModel):
 
     name: str
 
-class Group(BaseModel):
+class Group(BaseModel, GroupNetCDFMixin):
     class Config:
         title = 'Group Schema'
 
@@ -112,6 +113,8 @@ import numpy.typing
 from pydantic import BaseModel, Field
 from typing import List
 
+from vocal.netcdf.mixins import VariableNetCDFMixin
+
 from attributes import VariableAttributes
 
 
@@ -120,7 +123,7 @@ class VariableMeta(BaseModel):
     name: str
 
 
-class Variable(BaseModel):
+class Variable(BaseModel, VariableNetCDFMixin):
     meta: VariableMeta
     dimensions: List[str]
     attributes: VariableAttributes
@@ -130,8 +133,9 @@ DIMENSION_CODE = """
 from pydantic import BaseModel
 from typing import Union
 
+from vocal.netcdf.mixins import DimensionNetCDFMixin
 
-class Dimension(BaseModel):
+class Dimension(BaseModel, DimensionNetCDFMixin):
     name: str
     size: Union[int, None]
 """
