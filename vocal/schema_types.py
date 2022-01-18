@@ -22,7 +22,7 @@ Integer32 = InfoType(type_str('int32'))
 Integer64 = InfoType(type_str('int64'))
 Float32 = InfoType(type_str('float32'))
 Float64 = InfoType(type_str('float64'))
-String = InfoType(type_str('string'))
+String = InfoType(type_str('str'))
 
 np_invert = {
     np.dtype('float32'): Float32,
@@ -32,5 +32,8 @@ np_invert = {
     np.dtype('int32'): Integer32,
     np.dtype('int64'): Integer64,
     np.dtype('float32'): Float32,
-    np.dtype('float64'): Float64
+    np.dtype('float64'): Float64,
+    np.dtype('str'): String,
+    str: String,
+    float: Float32
 }
