@@ -7,8 +7,10 @@ from typing import Any, Container, Union
 import netCDF4 # type: ignore
 import numpy as np
 import pydantic
+from pydantic.main import BaseModel
 
-from .schema_types import np_invert
+from ..schema_types import np_invert
+# from .dataset import Dataset
 
 NCContainer = Union[netCDF4.Dataset, netCDF4.Group]
 
@@ -145,3 +147,20 @@ class NetCDFReader:
             return model(**self.ncdict)
 
         return model.construct(**self.ncdict)
+
+
+@dataclass
+class NetCDFWriter:
+
+    model: Union[BaseModel, dict]
+
+    def write(self, ncfile):
+        if isinstance(self.model, BaseModel):
+            self.model.create_example_file(ncfile)
+
+    def write_dimension(self, nc, dim):
+        nc.create_dimension(dim['name'], dim['size'])
+
+    def write_dataset(self, nc):
+        for dim in self.model.dimensions:
+            self.write_dimension(nc, dim)

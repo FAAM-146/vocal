@@ -1,12 +1,14 @@
 import netCDF4 # type: ignore
-from pydantic import BaseModel
-from typing import Union
+from typing import Protocol, Union
 
 
-class Dimension(BaseModel):
+class HasDimensionAttributes(Protocol):
     name: str
     size: Union[int, None]
 
-    def to_nc_container(self, nc: netCDF4.Dataset) -> None:
+
+class DimensionNetCDFMixin:
+
+    def to_nc_container(self: HasDimensionAttributes, nc: netCDF4.Dataset) -> None:
         print(f'Creating dimension {self.name}')
         nc.createDimension(self.name, self.size)

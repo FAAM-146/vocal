@@ -108,13 +108,8 @@ class VocabularyCreator:
         """
         Write dataset, group, and variable schemata to file.
         """
-        models = (
-            self.product_collection.model.model,
-            self.product_collection.model._Group,
-            self.product_collection.model._Variable
-        )
-
-        names = ('dataset_schema', 'group_schema', 'variable_schema')
+        models = [self.product_collection.model]
+        names = ['dataset_schema']
 
         for model, name in zip(models, names):
             writer = SchemaWriter(

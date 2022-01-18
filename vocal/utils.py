@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import copy
 import os
-from typing import Any, Iterator, Mapping, TYPE_CHECKING
+from typing import Any, Iterator, Mapping, TYPE_CHECKING, Type
 from dataclasses import dataclass
 from contextlib import contextmanager
 
 import pydantic
 import yaml
-
-if TYPE_CHECKING:
-    from .core import DataModel
 
 
 @dataclass
@@ -82,16 +79,19 @@ def dataset_from_partial_yaml(
     variable_template: dict,
     globals_template: dict,
     group_template: dict,
-    model: DataModel,
+    model: Type[pydantic.BaseModel],
     construct: bool = False
 ) -> pydantic.BaseModel:
 
-    if model.model is None:
+    if model is None:
         raise ValueError('Pydantic model has not been defined')
 
-    def parse_definition(defn: dict, ctype: str='dataset') -> dict:    
+    def parse_definition(defn: dict, ctype: str='dataset') -> dict:   
+        print(ctype)
+        print(defn)
+
         for var in defn['variables']:
-            
+                        
             _temp = copy.deepcopy(variable_template)
             _temp.update(var['attributes'])
             var['attributes'] = _temp
@@ -113,6 +113,6 @@ def dataset_from_partial_yaml(
         y = yaml.load(f, Loader=yaml.Loader)
 
         if construct:
-            return model.model.construct(**parse_definition(y))
+            return model.construct(**parse_definition(y))
         
-        return model.model(**parse_definition(y))
+        return model(**parse_definition(y))

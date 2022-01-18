@@ -4,7 +4,7 @@ import importlib
 from argparse import Namespace
 import sys
 
-from vocal.core import ProductDefinition, DataModel, register_defaults_module
+from vocal.core import ProductDefinition, register_defaults_module
 
 from . import parser_factory
 
@@ -14,8 +14,9 @@ def make_example_data(args: Namespace) -> None:
     output = args.output
 
     sys.path.insert(0, project)
+    # from models import Dataset
     try:
-        attributes = importlib.import_module('attributes')
+        Dataset = importlib.import_module('models').Dataset
     except ModuleNotFoundError as e:
         raise RuntimeError('Unable to import project attributes') from e
 
@@ -26,10 +27,7 @@ def make_example_data(args: Namespace) -> None:
 
     register_defaults_module(defaults)
 
-    dm = DataModel(attributes)
-
-    product = ProductDefinition(definition, dm)
-    print(product.construct())
+    product = ProductDefinition(definition, Dataset)
     product.create_example_file(output)
 
 def main() -> None:

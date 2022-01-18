@@ -1,21 +1,20 @@
+from typing import Any, Protocol
 import netCDF4 # type: ignore
 import numpy as np
 import numpy.typing
-from pydantic import BaseModel, Field
-from typing import List
+import pydantic
+
 from .training import variable_data_hooks, VariableTrainingData
-from .attributes import AttributesSet
 
-
-class VariableMeta(BaseModel):
-    datatype: str = Field(description='The type of the data')
+class HasAttributeMeta(Protocol):
     name: str
+    datatype: str
 
+class HasVariableAttributes(Protocol):
+    attributes: pydantic.BaseModel
+    meta: HasAttributeMeta
 
-class Variable(BaseModel):
-    meta: VariableMeta
-    dimensions: List[str]
-    attributes: AttributesSet
+class VariableNetCDFMixin:
 
     @property
     def np_type(self) -> numpy.typing.DTypeLike:
@@ -30,7 +29,7 @@ class Variable(BaseModel):
 
         return dtypes[self.meta.datatype]
 
-    def to_nc_container(self, nc: netCDF4.Dataset) -> netCDF4.Variable:
+    def to_nc_container(self: HasVariableAttributes, nc: netCDF4.Dataset) -> netCDF4.Variable:
         print(f'creating variable {self.meta.name}')
 
         # Seems to be some inconsistent behaviour with the alias, try both

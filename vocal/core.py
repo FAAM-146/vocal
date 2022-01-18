@@ -7,14 +7,16 @@ from typing import Any, Iterator, Optional, Protocol, Tuple, Type
 import pydantic
 
 from pydantic.error_wrappers import ValidationError
+# from pydantic.main import create_model
 
 from .utils import FolderManager, dataset_from_partial_yaml
-from .attributes import AttributesSet
+# from .attributes import AttributesSet
 from .writers import VocabularyCreator
-from .variable import Variable as _Variable
-from .group import Group as _Group
-from .dataset import Dataset as _Dataset
-from .netcdf import NetCDFReader
+# from .variable import Variable as _Variable
+# from .group import Group as _Group
+# from .dataset import Dataset as _Dataset
+# from .netcdf import NetCDFReader
+# from vocal import group
 
 ATTRIBUTE_TYPES = ('group', 'variable', 'globals')
 
@@ -36,60 +38,6 @@ class HasRequiredAttributesMembers(Protocol):
     default_variable_attrs: dict[str, Any]
 
 
-@dataclass
-class DataModel:
-    """
-    DataModel acts as a wrapper around a pydantic Dataset model, allowing the
-    specification of custom attribute collections as types.
-    """
-
-    attributes_module: Optional[HasAttributesMembers] = None
-    model: Optional[Type[_Dataset]] = None
-    _Group: Optional[Type[_Group]] = None
-    _Variable: Optional[Type[_Variable]] = None
-
-    def __post_init__(self):
-        if self.attributes_module is not None:
-            self.register_attributes_module(self.attributes_module)
-
-    def check_file(self, filename: str) -> pydantic.BaseModel:
-        return NetCDFReader(filename).to_model(self.model) # type: ignore
-
-    def register_attributes_module(self, module: HasAttributesMembers) -> None:
-        self.register_attributes(
-            variable_attributes=module.VariableAttributes,  # type: ignore
-            group_attributes=module.GroupAttributes,        # type: ignore
-            global_attributes=module.GlobalAttributes       # type: ignore
-        )
-
-    def register_attributes(
-        self,
-        variable_attributes: Type[AttributesSet],
-        group_attributes: Type[AttributesSet],
-        global_attributes: Type[AttributesSet],
-    ) -> None:
-        
-        # This is hideous, hacky, and probably broken. Totally blaming Graeme
-        # for making me generalize this :)
-        class Variable(_Variable):
-            attributes: variable_attributes # type: ignore
-        class Group(_Group):
-            attributes: group_attributes # type: ignore
-            variables: list[_Variable] # type: ignore
-            groups: Optional[list[_Group]] # type: ignore
-        class Dataset(_Dataset):
-            attributes: global_attributes # type: ignore
-            variables: list[_Variable]  # type: ignore
-            groups: Optional[list[_Group]] # type: ignore
-        Group.update_forward_refs(**locals())
-        Dataset.update_forward_refs(**locals())
-        Variable.update_forward_refs(**locals())
-
-        self.model = Dataset
-        self._Group = Group
-        self._Variable = Variable
-
-
 def register_defaults(name: str, mapping: dict) -> None:
     f"""
     Register a dictionary of default values
@@ -107,7 +55,7 @@ def register_defaults_module(module: HasRequiredAttributesMembers) -> None:
 class ProductDefinition:
 
     path: str
-    model: DataModel
+    model: Type[pydantic.BaseModel]
 
     def __call__(self) -> pydantic.BaseModel:
         return self._from_yaml(construct=False)
@@ -146,7 +94,7 @@ class ProductDefinition:
 @dataclass
 class ProductCollection:
 
-    model: DataModel
+    model: Type[pydantic.BaseModel]
     version: str
     vocab_creator: Optional[SupportsCreateVocabulary] = None
     definitions: list[ProductDefinition] = field(default_factory=list)
@@ -169,5 +117,7 @@ class ProductCollection:
 
     def write_vocabularies(self):
         for defn in self.definitions:
+            # print(defn)
             defn.validate()
+        # print('*'*100)
         self.vocab_creator.create_vocabulary()  

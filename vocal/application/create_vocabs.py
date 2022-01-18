@@ -9,7 +9,7 @@ from argparse import Namespace
 
 from . import parser_factory
 
-from vocal.core import DataModel, register_defaults_module, ProductCollection
+from vocal.core import ProductCollection ,register_defaults_module#DataModel, r, ProductCollection
 
 def create_vocabs(args: Namespace) -> None:
     project = args.project
@@ -18,10 +18,10 @@ def create_vocabs(args: Namespace) -> None:
 
     sys.path.insert(0, project)
     # Use importlib to prevent pylance moaning...
-    try:
-        attributes = importlib.import_module('attributes')
-    except ModuleNotFoundError as e:
-        raise RuntimeError('Unable to import project attributes') from e
+    # try:
+        # attributes = importlib.import_module('attributes')
+    # except ModuleNotFoundError as e:
+        # raise RuntimeError('Unable to import project attributes') from e
 
     try:
         defaults = importlib.import_module('defaults')
@@ -29,12 +29,16 @@ def create_vocabs(args: Namespace) -> None:
         raise RuntimeError('Unable to import project defaults') from e
 
     register_defaults_module(defaults)
-    dm = DataModel(attributes)
+    #dm = DataModel(attributes)
+    try:
+        Dataset = importlib.import_module('models.dataset').Dataset
+    except ModuleNotFoundError as e:
+        raise RuntimeError('Unable to import project models') from e
 
     defs_dir = os.path.join(project, 'definitions')
     defs_glob = os.path.join(defs_dir, '*.yaml')
 
-    collection = ProductCollection(model=dm, version=version)
+    collection = ProductCollection(model=Dataset, version=version)
 
     for defn in glob.glob(defs_glob):
         collection.add_product(defn)

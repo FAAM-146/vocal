@@ -1,29 +1,10 @@
 from __future__ import annotations
-from typing import Optional
 import netCDF4 # type: ignore
 
-from pydantic import BaseModel, Field
-
-from .dimension import Dimension
-from .attributes import AttributesSet
-from .group import Group
-from .variable import Variable
 from .training import global_data_hooks
 
 
-class DatasetMeta(BaseModel):
-    file_pattern: str = Field(description='Canonical filename pattern for this dataset')
-
-
-class Dataset(BaseModel):
-    class Config:
-        title = 'Dataset Schema'
-
-    meta: DatasetMeta
-    attributes: AttributesSet
-    dimensions: list[Dimension]
-    groups: Optional[list[Group]]
-    variables: list[Variable]
+class DatasetNetCDFMixin:
 
     def create_example_file(self, nc_filename: str) -> None:
         

@@ -6,16 +6,17 @@ import sys
 
 from pydantic.error_wrappers import ValidationError
 
-from vocal.core import DataModel, register_defaults_module
+from vocal.core import register_defaults_module
 from vocal.netcdf import NetCDFReader
+from pydantic import BaseModel
 
 from . import parser_factory
 
-def check_against_standard(model: DataModel, filename: str) -> bool:
+def check_against_standard(model: BaseModel, filename: str) -> bool:
     print(f'Checking {filename} against standard... ', end='')
     nc = NetCDFReader(filename)
     try:
-        nc.to_model(model.model) # type: ignore
+        nc.to_model(model) # type: ignore
     except ValidationError as err:
         print('FAIL!')
         for e in err.errors():
@@ -26,14 +27,11 @@ def check_against_standard(model: DataModel, filename: str) -> bool:
         print('OK!')
         return True
 
-def get_datamodel() -> DataModel:
+def get_datamodel() -> BaseModel:
     
-    try:
-        attributes = importlib.import_module('attributes')
-    except ModuleNotFoundError as e:
-        raise RuntimeError('Unable to import project attributes') from e
+    Dataset = importlib.import_module('models').Dataset
 
-    return DataModel(attributes)
+    return Dataset
 
 def register_defaults() -> None:
     try:
