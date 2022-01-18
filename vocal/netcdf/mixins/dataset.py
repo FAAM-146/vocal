@@ -1,12 +1,28 @@
 from __future__ import annotations
 import netCDF4 # type: ignore
+import pydantic
+import numpy.typing
+from typing import Protocol
 
 from ...training import global_data_hooks
 
 
+class HasDatasetMeta(Protocol):
+    file_pattern: str
+
+
+class HasDatasetAttributes(Protocol):
+    attributes: pydantic.BaseModel
+    variables: list[pydantic.BaseModel]
+    dimensions: list[pydantic.BaseModel]
+    groups: list[pydantic.BaseModel]
+    meta: HasDatasetMeta
+    np_type: numpy.typing.DTypeLike
+
+
 class DatasetNetCDFMixin:
 
-    def create_example_file(self, nc_filename: str) -> None:
+    def create_example_file(self: HasDatasetAttributes, nc_filename: str) -> None:
         
         with netCDF4.Dataset(nc_filename, 'w') as nc:
             for dim in self.dimensions:

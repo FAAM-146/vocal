@@ -12,12 +12,14 @@ class HasAttributeMeta(Protocol):
 
 class HasVariableAttributes(Protocol):
     attributes: pydantic.BaseModel
+    dimensions: list[str]
     meta: HasAttributeMeta
+    np_type: numpy.typing.DTypeLike
 
 class VariableNetCDFMixin:
 
     @property
-    def np_type(self) -> numpy.typing.DTypeLike:
+    def np_type(self: HasVariableAttributes) -> numpy.typing.DTypeLike:
         dtypes = {
             '<int32>': np.int32,
             '<int64>': np.int64,
