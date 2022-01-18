@@ -9,13 +9,12 @@ from pydantic.types import NonNegativeFloat
 from . import parser_factory
 
 ATTRIBUTES_TEMPLATE = """
-from pydantic import Field
-from vocal.attributes import AttributesSet
+from pydantic import Field, BaseModel
 
-class {attr_type}Attributes(AttributesSet):
+class {attr_type}Attributes(BaseModel):
     class Config:
         # Configuration options here
-        title = 'My {attr_type} attributes'
+        title = '{attr_type} Attributes'
 
     # Add your attributes here, e.g.
     #
@@ -35,7 +34,7 @@ MODELS_INIT = """
 from .dataset import Dataset, DatasetMeta
 from .variable import Variable, VariableMeta
 from .group import Group, GroupMeta
-from .dimension import dimension
+from .dimension import Dimension
 """
 
 DEFAULTS = """
@@ -49,16 +48,19 @@ default_variable_attrs = {}
 """
 
 DATASET_CODE = """
-from __future__ import annotations
 from typing import Optional
 import netCDF4 # type: ignore
 
 from pydantic import BaseModel, Field
 
+from vocal.netcdf.mixins import DatasetNetCDFMixin
+
+from attributes import GlobalAttributes
+
 from .dimension import Dimension
-from .attributes import AttributesSet
 from .group import Group
 from .variable import Variable
+
 
 class DatasetMeta(BaseModel):
     file_pattern: str = Field(description='Canonical filename pattern for this dataset')
@@ -69,7 +71,7 @@ class Dataset(BaseModel):
         title = 'Dataset Schema'
 
     meta: DatasetMeta
-    attributes: AttributesSet
+    attributes: GlobalAttributes
     dimensions: list[Dimension]
     groups: Optional[list[Group]]
     variables: list[Variable]
@@ -81,9 +83,10 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from attributes import GroupAttributes
+
 from .dimension import Dimension
 from .variable import Variable
-from .attributes import AttributesSet
 
 class GroupMeta(BaseModel):
     class Config:
@@ -96,7 +99,7 @@ class Group(BaseModel):
         title = 'Group Schema'
 
     meta: GroupMeta
-    attributes: AttributesSet
+    attributes: GroupAttributes
     dimensions: Optional[list[Dimension]]
     groups: Optional[list[Group]]
     variables: list[Variable]
@@ -108,8 +111,8 @@ import numpy as np
 import numpy.typing
 from pydantic import BaseModel, Field
 from typing import List
-from .training import variable_data_hooks, VariableTrainingData
-from .attributes import AttributesSet
+
+from attributes import VariableAttributes
 
 
 class VariableMeta(BaseModel):
@@ -120,20 +123,7 @@ class VariableMeta(BaseModel):
 class Variable(BaseModel):
     meta: VariableMeta
     dimensions: List[str]
-    attributes: AttributesSet
-
-    @property
-    def np_type(self) -> numpy.typing.DTypeLike:
-        dtypes = {
-            '<int32>': np.int32,
-            '<int64>': np.int64,
-            '<int8>': np.int8,
-            '<byte>': np.byte,
-            '<float32>': np.float32,
-            '<float64>': np.float64
-        }
-
-        return dtypes[self.meta.datatype]
+    attributes: VariableAttributes
 """
 
 DIMENSION_CODE = """
