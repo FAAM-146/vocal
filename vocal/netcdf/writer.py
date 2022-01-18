@@ -97,10 +97,15 @@ class NetCDFReader:
             )
 
         for group in nc.groups.values():
-            ret_dict['groups'].append(self._read_container(group))
+            grp = self._read_container(group)
+            grp['meta'] = {'name': group.name}
+            ret_dict['groups'].append(grp)
 
         if not ret_dict['groups']:
             del ret_dict['groups']
+
+        if not ret_dict['dimensions']:
+            del ret_dict['dimensions']
 
         return ret_dict
 
