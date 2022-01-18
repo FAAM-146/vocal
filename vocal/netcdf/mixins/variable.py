@@ -4,7 +4,7 @@ import numpy as np
 import numpy.typing
 import pydantic
 
-from .training import variable_data_hooks, VariableTrainingData
+from ...training import variable_data_hooks, VariableTrainingData
 
 class HasAttributeMeta(Protocol):
     name: str

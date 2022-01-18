@@ -1,7 +1,7 @@
 from __future__ import annotations
 import netCDF4 # type: ignore
 
-from .training import global_data_hooks
+from ...training import global_data_hooks
 
 
 class DatasetNetCDFMixin:
