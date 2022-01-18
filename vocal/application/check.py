@@ -8,24 +8,51 @@ from pydantic.error_wrappers import ValidationError
 
 from vocal.core import register_defaults_module
 from vocal.netcdf import NetCDFReader
+from vocal.checking import ProductChecker
 from pydantic import BaseModel
 
 from . import parser_factory
 
+LINE_LEN = 50
+
+def print_line(len: int=50, token: str='-'):
+    print(token * len)
+
 def check_against_standard(model: BaseModel, filename: str) -> bool:
+    print_line(LINE_LEN, '-')
     print(f'Checking {filename} against standard... ', end='')
     nc = NetCDFReader(filename)
     try:
         nc.to_model(model) # type: ignore
     except ValidationError as err:
-        print('FAIL!')
+        print('ERROR!')
         for e in err.errors():
-            loc = ' -> '.join([str(i) for i in e['loc']])
+            loc = ' --> ' + ' -> '.join([str(i) for i in e['loc']])
             print(f'{loc}: {e["msg"]}')
+        print_line(LINE_LEN, '-')
         return False
     else:
         print('OK!')
+        print_line(LINE_LEN, '-')
         return True
+
+def check_against_specification(specification: str, filename: str) -> bool:
+    pc = ProductChecker(specification)
+    pc.check(filename)
+    
+    for check in pc.checks:
+        print(f'{check.description}... ', end='')
+        if check.passed:
+            print('OK!')
+        else:
+            print('ERROR!')
+            print(f' --> [{check.error.path}] {check.error.message}')
+
+    print_line(LINE_LEN, '=')
+    print(f'{len(pc.errors)} errors found.')
+    print_line(LINE_LEN, '=')
+
+    return pc.passing
 
 def get_datamodel() -> BaseModel:
     
@@ -45,9 +72,10 @@ def check_file(args: Namespace) -> None:
     sys.path.insert(0, args.project)
 
     register_defaults()
-    ok = check_against_standard(model=get_datamodel(), filename=args.filename)
+    ok1 = check_against_standard(model=get_datamodel(), filename=args.filename)
+    ok2 = check_against_specification(args.definition, args.filename)
 
-    if ok:
+    if ok1 and ok2:
         sys.exit(0)
     else:
         sys.exit(1)
