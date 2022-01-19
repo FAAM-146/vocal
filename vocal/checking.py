@@ -313,7 +313,7 @@ class ProductChecker:
 
             self.compare_attributes(d_var['attributes'], f_var['attributes'], path=var_path)
 
-    def compare_groups(self, d: dict, f: dict, path: str='') -> None:
+    def compare_groups(self, d: Iterable, f: Iterable, path: str='') -> None:
         """
         Compare the dict representation of groups from a product specification
         and from file
@@ -326,28 +326,27 @@ class ProductChecker:
             path: The path to the group container
         """
 
-        try:
-            for def_group in d:
-                group_name = def_group["meta"]["name"]
-                group_path = f'{path}/{group_name}'
-                
-                check = self._check(
-                    description=f'Checking group {group_path} exists'
-                )
+        for def_group in d:
+            group_name = def_group["meta"]["name"]
+            group_path = f'{path}/{group_name}'
+            
+            check = self._check(
+                description=f'Checking group {group_path} exists'
+            )
 
+            try:
                 f_group = self.get_element(group_name, f)
-                if f_group is None:
-                    check.passed = False
-                    check.error = CheckError(
-                        message=f'group not found: {group_path}',
-                        path=group_path
-                    )
-                    
-                    continue
+            
+            except ElementDoesNotExist:
+                check.passed = False
+                check.error = CheckError(
+                    message=f'group not found: {group_path}',
+                    path=group_path
+                )
                 
-                self.compare_container(def_group, f_group, path=group_path)
-        except KeyError:
-            pass
+                continue
+            
+            self.compare_container(def_group, f_group, path=group_path)
 
     def compare_container(self, d: dict, f: dict, path: str='') -> None:
         """
