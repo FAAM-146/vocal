@@ -73,7 +73,11 @@ def check_file(args: Namespace) -> None:
 
     register_defaults()
     ok1 = check_against_standard(model=get_datamodel(), filename=args.filename)
-    ok2 = check_against_specification(args.definition, args.filename)
+
+    if args.definition:
+        ok2 = check_against_specification(args.definition, args.filename)
+    else:
+        ok2 = True
 
     if ok1 and ok2:
         sys.exit(0)
