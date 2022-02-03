@@ -57,7 +57,7 @@ class InstanceWriter(BaseWriter):
 
     @property
     def _json(self) -> str:
-        _dict = self.model.dict(exclude_unset=True)
+        _dict = self.model.dict(exclude_unset=True, by_alias=True)
         return json.dumps(_dict, indent=self.indent)
 
 
