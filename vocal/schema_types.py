@@ -35,5 +35,7 @@ np_invert = {
     np.dtype('float64'): Float64,
     np.dtype('str'): String,
     str: String,
-    float: Float32
+    float: Float32,
+    np.float32: Float32,
+    np.int32: Integer32
 }
