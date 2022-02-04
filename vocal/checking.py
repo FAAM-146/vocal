@@ -38,13 +38,24 @@ class CheckError:
 
 
 @dataclass
+class CheckWarning:
+    """
+    Represents a warning in a check
+    """
+    message: str
+    path: str
+
+
+@dataclass
 class Check:
     """
     Represents a single check
     """
     description: str
     passed: bool = True
+    has_warning: bool = False
     error: Union[CheckError, None] = None
+    warning: Union[CheckWarning, None] = None
 
 
 @dataclass
@@ -69,6 +80,17 @@ class ProductChecker:
             raise NotCheckedError('Checks have not been performed')
 
         return all([i.passed for i in self.checks])
+
+    @property
+    def warnings(self) -> list[CheckWarning]:
+        """
+        Returns a list of CheckWarnings for checks which have warning on them, or
+        raises a NotCheckedError if no checks have been carried out
+        """
+        if not self.checks:
+            raise NotCheckedError('Checks have not been performed')
+
+        return [i.warning for i in self.checks if i.has_warning]
 
     @property
     def errors(self) -> list[CheckError]:
@@ -214,8 +236,15 @@ class ProductChecker:
             self.check_attribute_value(d[def_key], f[def_key], path=f'{path}.{def_key}')
 
         for file_key in f:
+            check = self._check(
+                description=f'Checking attribute {path}.{file_key} in definition'        
+            )
             if file_key not in d:
-                print(f'Warning: attribute {path}.{file_key} not in definition')
+                check.has_warning = True
+                check.warning = CheckWarning(
+                    message=f'Found attribute .{file_key} which is not in definition',
+                    path=f'{path}.{file_key}'
+                )
 
 
     def get_element(self, name: str, container: Iterable) -> dict:
@@ -239,7 +268,9 @@ class ProductChecker:
         
         raise ElementDoesNotExist(f'Element {name} not found')
 
-    def check_variable_exists(self, name: str, parent: Iterable, path: str='') -> bool:
+    def check_variable_exists(
+        self, name: str, parent: Iterable, path: str='', from_file: bool=False
+        ) -> bool:
         """
         Check a variable exists in a parent, which is assumed to be an iterable
         yielding a dict representation of the variable.
@@ -247,6 +278,8 @@ class ProductChecker:
         Args:
             name: the name of the variable to check
             container: an iterable yielding dict variable representations
+            from_file: if True, checking variable from file is in definition,
+                       if False, checking variable from definition is in file.
             
         Kwargs:
             path: the full path of the variable in the netCDF
@@ -255,13 +288,15 @@ class ProductChecker:
             True if the variable exists, False otherwise
         """
 
-        check = self._check(description=f'Checking variable {path} exists')
+        in_type = 'in definition' if from_file else 'in file'
+
+        check = self._check(description=f'Checking variable {path} exists {in_type}')
 
         try:
             self.get_element(name, parent)
         except ElementDoesNotExist:
             check.passed = False
-            check.error = CheckError('Variable does not exist', path)
+            check.error = CheckError(f'Variable does not exist {in_type}', path)
             return False
 
         return True
@@ -317,6 +352,13 @@ class ProductChecker:
             self.check_variable_dtype(d_var, f_var, path=var_path)
 
             self.compare_attributes(d_var['attributes'], f_var['attributes'], path=var_path)
+
+        for f_var in f:
+            var_name = f_var["meta"]["name"]
+            var_path = f'{path}/{var_name}'
+
+            if not self.check_variable_exists(var_name, d, path=var_path, from_file=True):
+                continue
 
     def compare_groups(self, d: Iterable, f: Iterable, path: str='') -> None:
         """

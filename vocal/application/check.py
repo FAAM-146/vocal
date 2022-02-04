@@ -1,6 +1,7 @@
 """Check a netCDF file against standard and product definitions."""
 
 from argparse import Namespace
+from dataclasses import dataclass
 import importlib
 import sys
 
@@ -15,25 +16,53 @@ from . import parser_factory
 
 LINE_LEN = 50
 
-def print_line(len: int=50, token: str='-'):
-    print(token * len)
+
+@dataclass
+class Printer:
+    quiet: bool = False
+    errors_only: bool = False
+
+    def print_line(self, len: int=50, token: str='-'):
+        if self.quiet or self.errors_only:
+            return
+        print(token * len)
+
+    def print_line_err(self, len: int=50, token: str='-'):
+        if self.quiet:
+            return
+        print(token * len)
+
+    def print(self, *args, **kwargs):
+        if self.quiet or self.errors_only:
+            return
+
+        print(*args, **kwargs)
+        
+    def print_err(self, *args, **kwargs):
+        if self.quiet:
+            return
+
+        print(*args, **kwargs)
+
+p = Printer()
+    
 
 def check_against_standard(model: BaseModel, filename: str) -> bool:
-    print_line(LINE_LEN, '-')
-    print(f'Checking {filename} against standard... ', end='')
+    p.print_line(LINE_LEN, '-')
+    p.print(f'Checking {filename} against standard... ', end='')
     nc = NetCDFReader(filename)
     try:
         nc.to_model(model) # type: ignore
     except ValidationError as err:
-        print('ERROR!')
+        p.print_err('ERROR')
         for e in err.errors():
             loc = ' --> ' + ' -> '.join([str(i) for i in e['loc']])
-            print(f'{loc}: {e["msg"]}')
-        print_line(LINE_LEN, '-')
+            p.print_err(f'{loc}: {e["msg"]}')
+        p.print_line(LINE_LEN, '-')
         return False
     else:
-        print('OK!')
-        print_line(LINE_LEN, '-')
+        p.print('OK!')
+        p.print_line(LINE_LEN, '-')
         return True
 
 def check_against_specification(specification: str, filename: str) -> bool:
@@ -41,16 +70,22 @@ def check_against_specification(specification: str, filename: str) -> bool:
     pc.check(filename)
     
     for check in pc.checks:
-        print(f'{check.description}... ', end='')
+        p.print(f'{check.description}... ', end='')
         if check.passed:
-            print('OK!')
+            
+            if check.has_warning:
+                p.print_err('WARNING', end='')
+                p.print_err(f' --> {check.warning.path}: {check.warning.message}')
+            else:
+                p.print('OK!')
         else:
-            print('ERROR!')
-            print(f' --> [{check.error.path}] {check.error.message}')
+            p.print_err('ERROR', end='')
+            p.print_err(f' --> {check.error.path}: {check.error.message}')
 
-    print_line(LINE_LEN, '=')
-    print(f'{len(pc.errors)} errors found.')
-    print_line(LINE_LEN, '=')
+    p.print_line_err(LINE_LEN, '=')
+    p.print_err(f'{len(pc.errors)} errors found.')
+    p.print_err(f'{len(pc.warnings)} warnings found.')
+    p.print_line_err(LINE_LEN, '=')
 
     return pc.passing
 
@@ -106,6 +141,18 @@ def main() -> None:
         help='Product definition to test against'
     )
 
+    parser.add_argument(
+        '-e',  '--error-only', action='store_true',# metavar='DEFINITION',
+        help='Only print errors'
+    )
+
+    parser.add_argument(
+        '-q',  '--quiet', action='store_true',# metavar='DEFINITION',
+        help='Do not print any output'
+    )
+
     args = parser.parse_args(sys.argv[2:])
+    p.errors_only = args.error_only
+    p.quiet = args.quiet
 
     check_file(args)
