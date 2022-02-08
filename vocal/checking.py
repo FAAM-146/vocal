@@ -1,10 +1,17 @@
 from dataclasses import dataclass
+import enum
 from typing import Any, Iterable, Optional, Union
 from vocal.netcdf import NetCDFReader
 from vocal.schema_types import np_invert
 
 import json
 import re
+
+class VariableStatus(enum.Enum):
+    EXISTS = enum.auto()
+    DOES_NOT_EXIST_AND_REQUIRED = enum.auto()
+    DOES_NOT_EXIST_AND_NOT_REQUIRED = enum.auto()
+
 
 class CheckException(Exception):
     """
@@ -277,7 +284,8 @@ class ProductChecker:
         raise ElementDoesNotExist(f'Element {name} not found')
 
     def check_variable_exists(
-        self, name: str, parent: Iterable, path: str='', from_file: bool=False
+        self, name: str, parent: Iterable, path: str='', from_file: bool=False,
+        required: bool=True
         ) -> bool:
         """
         Check a variable exists in a parent, which is assumed to be an iterable
@@ -303,11 +311,13 @@ class ProductChecker:
         try:
             self.get_element(name, parent)
         except ElementDoesNotExist:
+            if not required:
+               return VariableStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED
             check.passed = False
             check.error = CheckError(f'Variable does not exist {in_type}', path)
-            return False
+            return VariableStatus.DOES_NOT_EXIST_AND_REQUIRED
 
-        return True
+        return VariableStatus.EXISTS
 
     def check_variable_dtype(self, d: dict, f: dict, path: str='') -> None:
         """
@@ -350,11 +360,17 @@ class ProductChecker:
 
         for d_var in d:
             var_name = d_var["meta"]["name"]
+            var_required = d_var['meta']['required']
             var_path = f'{path}/{var_name}'
 
-            if not self.check_variable_exists(var_name, f, path=var_path):
-                continue
+            variable_stat = self.check_variable_exists(
+                var_name, f, path=var_path, required=var_required
+            )
             
+            if variable_stat in (
+                    VariableStatus.DOES_NOT_EXIST_AND_REQUIRED,
+                    VariableStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED):
+                continue
 
             f_var = self.get_element(var_name, f)
             self.check_variable_dtype(d_var, f_var, path=var_path)

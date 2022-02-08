@@ -74,8 +74,8 @@ def check_against_specification(specification: str, filename: str) -> bool:
         if check.passed:
             
             if check.has_warning:
-                p.print_err('WARNING', end='')
-                p.print_err(f' --> {check.warning.path}: {check.warning.message}')
+                p.print('WARNING', end='')
+                p.print(f' --> {check.warning.path}: {check.warning.message}')
             else:
                 p.print('OK!')
         else:
