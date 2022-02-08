@@ -20,10 +20,11 @@ LINE_LEN = 50
 @dataclass
 class Printer:
     quiet: bool = False
-    errors_only: bool = False
+    ignore_info: bool = False
+    ignore_warnings: bool = False
 
     def print_line(self, len: int=50, token: str='-'):
-        if self.quiet or self.errors_only:
+        if self.quiet or self.ignore_info:
             return
         print(token * len)
 
@@ -33,13 +34,19 @@ class Printer:
         print(token * len)
 
     def print(self, *args, **kwargs):
-        if self.quiet or self.errors_only:
+        if self.quiet or self.ignore_info:
             return
 
         print(*args, **kwargs)
         
     def print_err(self, *args, **kwargs):
         if self.quiet:
+            return
+
+        print(*args, **kwargs)
+
+    def print_warn(self, *args, **kwargs):
+        if self.quiet or self.ignore_warnings:
             return
 
         print(*args, **kwargs)
@@ -74,8 +81,8 @@ def check_against_specification(specification: str, filename: str) -> bool:
         if check.passed:
             
             if check.has_warning:
-                p.print('WARNING', end='')
-                p.print(f' --> {check.warning.path}: {check.warning.message}')
+                p.print_warn('WARNING', end='')
+                p.print_warn(f' --> {check.warning.path}: {check.warning.message}')
             else:
                 p.print('OK!')
         else:
@@ -83,8 +90,9 @@ def check_against_specification(specification: str, filename: str) -> bool:
             p.print_err(f' --> {check.error.path}: {check.error.message}')
 
     p.print_line_err(LINE_LEN, '=')
+    p.print_err(f'{len(pc.checks)} checks.')
+    p.print_err(f'{len(pc.warnings)} warnings.')
     p.print_err(f'{len(pc.errors)} errors found.')
-    p.print_err(f'{len(pc.warnings)} warnings found.')
     p.print_line_err(LINE_LEN, '=')
 
     return pc.passing
@@ -143,7 +151,12 @@ def main() -> None:
 
     parser.add_argument(
         '-e',  '--error-only', action='store_true',# metavar='DEFINITION',
-        help='Only print errors'
+        help='Only print errors. Takes presidence over -w/--warnings'
+    )
+
+    parser.add_argument(
+        '-w',  '--warnings', action='store_true',# metavar='DEFINITION',
+        help='Only print warnings and errors'
     )
 
     parser.add_argument(
@@ -152,7 +165,12 @@ def main() -> None:
     )
 
     args = parser.parse_args(sys.argv[2:])
-    p.errors_only = args.error_only
+    if args.error_only:
+        p.ignore_info = True
+        p.ignore_warnings = True
+    if args.warnings:
+        p.ignore_info = True
+
     p.quiet = args.quiet
 
     check_file(args)
