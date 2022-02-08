@@ -188,9 +188,11 @@ class ProductChecker:
             return self.check_attribute_type(d, f, path=path)
 
         if isinstance(d, list):
-            for i, (_d, _f) in enumerate(zip(d, f)):
-                self.check_attribute_value(_d, _f, path=f'{path}[{i}]')
-            return
+            if len(d) > 1:
+                for i, (_d, _f) in enumerate(zip(d, f)):
+                    self.check_attribute_value(_d, _f, path=f'{path}[{i}]')
+                return
+            d = d[0]
 
         check = self._check(
             description=f'Checking value of {path}'
