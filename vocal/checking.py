@@ -360,7 +360,7 @@ class ProductChecker:
 
         for d_var in d:
             var_name = d_var["meta"]["name"]
-            var_required = d_var['meta']['required']
+            var_required = d_var['meta'].get('required', True)
             var_path = f'{path}/{var_name}'
 
             variable_stat = self.check_variable_exists(
