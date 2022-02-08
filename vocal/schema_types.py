@@ -8,14 +8,14 @@ DerivedType = NewType('DerivedType', str)
 DerivedString = DerivedType(derived_str('str'))
 DerivedInteger32 = DerivedType(derived_str('int32'))
 DerivedInteger64 = DerivedType(derived_str('int64'))
-DerivedByte = DerivedType(derived_str('byte'))
+DerivedByte = DerivedType(derived_str('int8'))
 DerivedFloat32 = DerivedType(derived_str('float32'))
 DerivedFloat64 = DerivedType(derived_str('float64'))
 Numeric = Union[float, int]
 
 type_str = lambda typ: f'<{typ}>'
 InfoType = NewType('InfoType', str)
-Byte = InfoType(type_str('byte'))
+Byte = InfoType(type_str('int8'))
 Integer8 = InfoType(type_str('int8'))
 Integer16 = InfoType(type_str('int16'))
 Integer32 = InfoType(type_str('int32'))
@@ -37,5 +37,8 @@ np_invert = {
     str: String,
     float: Float32,
     np.float32: Float32,
-    np.int32: Integer32
+    np.int32: Integer32,
+    np.int8: Integer8,
+    np.byte: Byte,
+    list: list
 }

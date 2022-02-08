@@ -132,14 +132,16 @@ class ProductChecker:
         Returns:
             An info type, for example <str>, <float32>
         """
-        rex = re.compile("<([a-z0-9]+): derived_from_file>")
+        # rex = re.compile("<([a-z0-9]+): derived_from_file>")
+        rex = re.compile('<(Array)?\[?([a-z0-9]+)\]?: derived_from_file>')
         matches = rex.search(placeholder)
         if not matches:
             raise ValueError('Unable to get type from placeholder')
 
-        dtype = f'<{matches.groups()[0]}>'
+        dtype = f'<{matches.groups()[1]}>'
+        container = matches.groups()[0]
 
-        return dtype
+        return dtype, container
 
     def check_attribute_type(self, d: Any, f: Any, path: str='') -> None:
         """
@@ -158,12 +160,16 @@ class ProductChecker:
             description=f'Checking attribute {path} type is correct'
         )
 
-        expected_type = self.get_type_from_placeholder(d)
+        expected_type, container = self.get_type_from_placeholder(d)
         actual_type = np_invert[type(f)]
 
         if expected_type == actual_type:
             return
-        
+
+        if container == 'Array' and actual_type is list:
+            if all([np_invert[type(i)] == expected_type for i in f]):
+                return
+
         check.passed = False
         check.error = CheckError(
             message=f'Type of {path} incorrect. Expected {expected_type}, got {actual_type}',
