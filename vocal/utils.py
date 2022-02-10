@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import os
+import re
 from typing import Any, Iterator, Mapping, TYPE_CHECKING, Type
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -72,6 +73,27 @@ class FolderManager:
             raise
         finally:
             os.chdir(cwd)
+
+def get_type_from_placeholder(placeholder: str) -> str:
+        """
+        Returns the type from a placeholder string. 
+
+        Args:
+            placeholder: the placeholder string
+
+        Returns:
+            An info type, for example <str>, <float32>
+        """
+        # rex = re.compile("<([a-z0-9]+): derived_from_file>")
+        rex = re.compile('<(Array)?\[?([a-z0-9]+)\]?: derived_from_file>')
+        matches = rex.search(placeholder)
+        if not matches:
+            raise ValueError('Unable to get type from placeholder')
+
+        dtype = f'<{matches.groups()[1]}>'
+        container = matches.groups()[0]
+
+        return dtype, container
 
 def dataset_from_partial_yaml(
     

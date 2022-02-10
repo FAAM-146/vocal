@@ -2,7 +2,7 @@ import warnings
 
 from dataclasses import dataclass
 from functools import partial
-from typing import Union
+from typing import Any, Union
 import netCDF4 # type: ignore
 
 import numpy as np
@@ -14,7 +14,7 @@ TIME_END = 3601
 
 NT = TIME_END - TIME_START
 
-def geospatial(nc: netCDF4.Dataset, axis: str, extrema: str) -> Union[float, None]:
+def geospatial(nc: netCDF4.Dataset, axis: str, extrema: str, attrs) -> Union[float, None]:
     """
     Defines a function generic which can be partially completed to provide 
     functions which search the netcdf container for coordinate variables and
@@ -44,11 +44,11 @@ def geospatial(nc: netCDF4.Dataset, axis: str, extrema: str) -> Union[float, Non
         _val = func([func(nc[var][:]), _val])
 
     if _val == extreme_value:
-        _dummy_val = 0 if extrema == 'min' else 10
+        _dummy_val = np.float32(0) if extrema == 'min' else np.float32(10)
         warnings.warn(f'Unable to infer {extrema} geospatial bound on axis {axis}, using {_dummy_val}')
         return _dummy_val
 
-    return _val
+    return np.float32(_val)
 
 # Complete partials for each geospatial attribute
 geospatial_lon_max = partial(geospatial, axis='X', extrema='max')
@@ -58,9 +58,46 @@ geospatial_lat_min = partial(geospatial, axis='Y', extrema='min')
 geospatial_vertical_max = partial(geospatial, axis='Z', extrema='max')
 geospatial_vertical_min = partial(geospatial, axis='Z', extrema='min')
 
+def revision_number(nc: netCDF4.Dataset, attrs: pydantic.BaseModel) -> np.int32:
+    return np.int32(attrs.revision_number)
+
+def actual_range(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> Union[list[Any], None]:
+    try:
+        if attrs.standard_name == 'time':
+            return None
+    except AttributeError:
+        pass
+    if attrs.flag_meanings is None:
+        return [np.min(var), np.max(var)]
+    return None
+
+def units(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> str:
+    if attrs.standard_name != 'time':
+        return attrs.units
+    return "seconds since 1970-01-01 00:00:00 +0000"
+
+def flag_masks(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> list[np.int8]:
+    if attrs.flag_masks is None:
+        return None
+    try:
+        return [np.int8(2**i) for i, _ in enumerate(attrs.flag_meanings.split())]
+    except (AttributeError, TypeError):
+        return None
+
+def flag_values(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> list[np.int8]:
+    if attrs.flag_values is None:
+        return None
+    try:
+        return [np.int8(2**i) for i, _ in enumerate(attrs.flag_meanings.split())]
+    except (AttributeError, TypeError):
+        return None        
+
 # Hooks for completing variable attributes in test datasets
 variable_data_hooks = {
-    'actual_range': lambda x: [np.min(x), np.max(x)]
+    'actual_range': actual_range,
+    'flag_masks': flag_masks,
+    'flag_values': flag_values,
+    'units': units
 }
 
 # Hooks for completing global attributes in test datasets
@@ -70,7 +107,8 @@ global_data_hooks = {
     'geospatial_lat_max': geospatial_lat_max,
     'geospatial_lat_min': geospatial_lat_min,
     'geospatial_vertical_max': geospatial_vertical_max,
-    'geospatial_vertical_min': geospatial_vertical_min
+    'geospatial_vertical_min': geospatial_vertical_min,
+    'revision_number': revision_number
 }
 
 @dataclass
@@ -117,24 +155,18 @@ class VariableTrainingData:
         """
         Get dummy flag data
         """
-        flags = None
-
-        try:
-            flags = self.attrs.flag_values # type: ignore
-        except AttributeError:
-            pass
-
-        try:
+        
+        flags = self.attrs.flag_values # type: ignore
+  
+        if flags is None:        
             flags = self.attrs.flag_masks # type: ignore
-        except AttributeError:
-            pass
 
         if flags is None:
             raise ValueError(
                 'Flag variable does not include flag_values or flag_masks'
             )
-
-        return flags[0] * np.ones(self._get_data_size())
+            
+        return (flags[0] * np.ones(self._get_data_size())).astype(np.int8)
 
     def _get_data_size(self) -> tuple:
         sizes = []
@@ -153,6 +185,10 @@ class VariableTrainingData:
 
         if self.axis == 'T':
             self.var[:] = self._get_time()
+            return
+
+        if self.attrs.flag_meanings: 
+            self.var[:] = self._get_dummy_flag()
             return
 
         self.var[:] = self._get_dummy_data()

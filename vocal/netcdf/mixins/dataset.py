@@ -5,7 +5,7 @@ import numpy.typing
 from typing import Protocol
 
 from ...training import global_data_hooks
-
+from ...utils import get_type_from_placeholder
 
 class HasDatasetMeta(Protocol):
     file_pattern: str
@@ -37,23 +37,12 @@ class DatasetNetCDFMixin:
 
             for attr, value in self.attributes:
                 try:
-                    value = global_data_hooks[attr](nc)
+                    value = global_data_hooks[attr](nc=nc, attrs=self.attributes)
                 except KeyError:
                     pass
 
                 if value is None:
                     continue
-
-                try:
-                    if value.startswith('<') and value.endswith('>'):
-                        try:
-                            schema = self.attributes.schema()
-                            value = schema['properties'][attr]['example']
-                        except KeyError:
-                            print(self.schema())
-                            raise
-                except AttributeError:
-                    pass
 
                 try:
                     setattr(nc, attr, value)

@@ -55,7 +55,7 @@ class VariableNetCDFMixin:
 
         for attr, value in self.attributes:
             try:
-                value = variable_data_hooks[attr](var)
+                value = variable_data_hooks[attr](var, self.attributes)
             except KeyError:
                 pass
 

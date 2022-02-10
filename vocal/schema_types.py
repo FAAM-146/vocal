@@ -37,6 +37,7 @@ np_invert = {
     str: String,
     float: Float32,
     np.float32: Float32,
+    np.int64: Integer64,
     np.int32: Integer32,
     np.int8: Integer8,
     np.byte: Byte,
