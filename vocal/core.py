@@ -102,7 +102,7 @@ class ProductCollection:
     def __post_init__(self):
         if self.vocab_creator is None:
             self.vocab_creator = VocabularyCreator(
-                self, FolderManager, 'vocabularies', self.version
+                self, FolderManager, 'products', self.version
             )
 
     def add_product(self, path: str) -> None:
@@ -115,7 +115,7 @@ class ProductCollection:
             name = os.path.basename(defn.path).split('.')[0]
             yield name, defn.construct()
 
-    def write_vocabularies(self):
+    def write_product_definitions(self):
         for defn in self.definitions:
             defn.validate()
         self.vocab_creator.create_vocabulary()  
