@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from email.generator import Generator
 import enum
 from typing import Any, Iterable, Optional, Union
 from vocal.netcdf import NetCDFReader
@@ -63,6 +64,22 @@ class Check:
     has_warning: bool = False
     error: Union[CheckError, None] = None
     warning: Union[CheckWarning, None] = None
+
+
+@dataclass
+class DimensionCollector:
+    
+    dimensions: list[dict] = field(default_factory=list)
+
+    def search(self, container: dict) -> list[dict]:
+
+        for dim in container.get('dimensions', []):
+            self.dimensions.append(dim)
+
+        for group in container.get('groups', []): 
+            self.search(group)
+
+        return self.dimensions
 
 
 @dataclass
@@ -419,6 +436,24 @@ class ProductChecker:
             
             self.compare_container(def_group, f_group, path=group_path)
 
+    def compare_dimensions(self, d: Iterable, f: Iterable, path: str='') -> None:
+        def_dims = DimensionCollector().search(d)
+        file_dims = DimensionCollector().search(f)
+
+        for dim in file_dims:
+            _path = f'{path}/[{dim["name"]}]'
+            check = self._check(
+                description=f'Checking dimension {dim["name"]} is in definition'
+            )
+            if dim in def_dims:
+                continue
+
+            check.passed = False
+            check.error = CheckError(
+                message=f'Dimension {dim["name"]} not found in definition',
+                path=_path
+            )
+
     def compare_container(self, d: dict, f: dict, path: str='') -> None:
         """
         Compare the dict representation of a netcdf container from a product
@@ -455,4 +490,5 @@ class ProductChecker:
         product_def = self.load_definition()
         netcdf_rep = NetCDFReader(target_file).dict
 
+        self.compare_dimensions(product_def, netcdf_rep)
         self.compare_container(product_def, netcdf_rep)
