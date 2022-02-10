@@ -194,6 +194,8 @@ class ProductChecker:
             if all([np_invert[type(i)] == expected_type for i in f]):
                 return
 
+        if actual_type is list:
+            actual_type = [np_invert[type(i)] for i in f]
         check.passed = False
         check.error = CheckError(
             message=f'Type of {path} incorrect. Expected {expected_type}, got {actual_type}',
