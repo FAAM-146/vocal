@@ -1,4 +1,4 @@
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
 import netCDF4 # type: ignore
 import numpy as np
 import numpy.typing
@@ -31,7 +31,9 @@ class VariableNetCDFMixin:
 
         return dtypes[self.meta.datatype]
 
-    def to_nc_container(self: HasVariableAttributes, nc: netCDF4.Dataset) -> netCDF4.Variable:
+    def to_nc_container(
+        self: HasVariableAttributes, nc: netCDF4.Dataset, coordinates: Optional[str]
+    ) -> netCDF4.Variable:
         print(f'creating variable {self.meta.name}')
 
         # Seems to be some inconsistent behaviour with the alias, try both
@@ -54,6 +56,13 @@ class VariableNetCDFMixin:
         VariableTrainingData(var, self.attributes).populate()
 
         for attr, value in self.attributes:
+
+            # Deal with the case where non-local coordinates are given.
+            # This is such a kludge.
+            if coordinates is not None:
+                if attr == 'coordinates' and self.attributes.dict()['coordinates'] is not None:
+                    setattr(var, attr, coordinates)
+                    continue
             try:
                 value = variable_data_hooks[attr](var, self.attributes)
             except KeyError:

@@ -28,7 +28,7 @@ def make_example_data(args: Namespace) -> None:
     register_defaults_module(defaults)
 
     product = ProductDefinition(definition, Dataset)
-    product.create_example_file(output)
+    product.create_example_file(output, find_coords=args.find_coordinates)
 
 def main() -> None:
 
@@ -53,6 +53,12 @@ def main() -> None:
         '-o', '--output', type=str, metavar='OUTPUT',
         dest='output', required=True,
         help='The output filename'
+    )
+
+    parser.add_argument(
+        '-fc', '--find-coordinates', action='store_true',
+        help=('Use standard names to generate coordinates attribute '
+              'rather than relying on specification/example')
     )
 
     args = parser.parse_args(sys.argv[2:])

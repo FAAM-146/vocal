@@ -2,7 +2,7 @@ from __future__ import annotations
 import netCDF4 # type: ignore
 import pydantic
 import numpy.typing
-from typing import Protocol
+from typing import Optional, Protocol
 
 from ...training import global_data_hooks
 from ...utils import get_type_from_placeholder
@@ -22,14 +22,16 @@ class HasDatasetAttributes(Protocol):
 
 class DatasetNetCDFMixin:
 
-    def create_example_file(self: HasDatasetAttributes, nc_filename: str) -> None:
+    def create_example_file(
+        self: HasDatasetAttributes, nc_filename: str, coordinates: Optional[str]
+    ) -> None:
         
         with netCDF4.Dataset(nc_filename, 'w') as nc:
             for dim in self.dimensions:
                 dim.to_nc_container(nc)
 
             for var in self.variables:
-                var.to_nc_container(nc)
+                var.to_nc_container(nc, coordinates)
 
             if self.groups is not None:
                 for group in self.groups:

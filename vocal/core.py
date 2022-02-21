@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 
 from dataclasses import dataclass, field
+from tkinter import N
 from typing import Any, Iterator, Optional, Protocol, Tuple, Type
 import pydantic
 
@@ -73,8 +74,36 @@ class ProductDefinition:
             construct=construct
         )
 
-    def create_example_file(self, nc_filename: str) -> None:
-        self().create_example_file(nc_filename) # type: ignore
+    def create_example_file(self, nc_filename: str, find_coords: bool=False) -> None:
+
+        
+        coordinates = self.coordinates() if find_coords else None
+
+        self().create_example_file(
+            nc_filename, coordinates=coordinates
+        ) # type: ignore
+
+    def coordinates(self) -> str:
+        dataset = self()
+
+        _coords = {
+            'latitude': None,
+            'longitude': None,
+            'altitude': None,
+            'time': None
+        }
+
+        for var in dataset.variables:
+            for _crd in _coords.keys():
+                if var.attributes.standard_name == _crd:
+                    _coords[_crd] = var.meta.name
+
+        coord_arr = [v for _, v in _coords.items() if v]
+        
+        coord_str = ' '.join(coord_arr)
+        
+        return coord_str
+        
 
     def validate(self) -> None:
         errors = False

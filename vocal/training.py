@@ -183,7 +183,7 @@ class VariableTrainingData:
         Populate the provided variable with data.
         """
 
-        if self.axis == 'T':
+        if self.attrs.standard_name == 'time':
             self.var[:] = self._get_time()
             return
 
