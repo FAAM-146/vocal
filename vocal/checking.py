@@ -8,10 +8,22 @@ from vocal.schema_types import np_invert
 import json
 import re
 
+PLACEHOLDER_RE = ('<(?P<container>Array)?'
+                  '\[?(?P<dtype>[a-z0-9]+)\]?'
+                  ': derived_from_file'
+                  '\s?'
+                  '(?P<additional>.*)>')
+
 class VariableStatus(enum.Enum):
     EXISTS = enum.auto()
     DOES_NOT_EXIST_AND_REQUIRED = enum.auto()
     DOES_NOT_EXIST_AND_NOT_REQUIRED = enum.auto()
+
+
+@dataclass
+class AttributeProperties:
+    optional: bool = False
+    regex: Optional[str] = None
 
 
 class CheckException(Exception):
@@ -156,16 +168,44 @@ class ProductChecker:
         Returns:
             An info type, for example <str>, <float32>
         """
-        # rex = re.compile("<([a-z0-9]+): derived_from_file>")
-        rex = re.compile('<(Array)?\[?([a-z0-9]+)\]?: derived_from_file>')
+        
+        rex = re.compile(PLACEHOLDER_RE)
         matches = rex.search(placeholder)
         if not matches:
             raise ValueError('Unable to get type from placeholder')
 
-        dtype = f'<{matches.groups()[1]}>'
-        container = matches.groups()[0]
+        dtype = f'<{matches["dtype"]}>'
+        container = matches['container']
 
         return dtype, container
+
+    def get_attribute_props_from_placeholder(self, placeholder: str) -> AttributeProperties:
+        """
+        Returns additional attributes from a placeholder string.
+
+        Args:
+            placeholder: the placeholder string
+
+        Returns:
+            Additional placeholder info, in the form of an AttributeProperties object.
+        """
+
+        rex = re.compile(PLACEHOLDER_RE)
+        matches = rex.search(placeholder)
+
+        additional = matches['additional']
+        additional_rex = re.compile(
+            '(?P<optional>optional)?,'
+            '?((regex=)(?P<regex>.+))?'
+        )
+        matches = additional_rex.search(additional)
+        
+        kwargs = {
+            'optional': matches['optional'] == 'optional',
+            'regex': matches['regex']
+        }
+        
+        return AttributeProperties(**kwargs)
 
     def check_attribute_type(self, d: Any, f: Any, path: str='') -> None:
         """
@@ -254,12 +294,16 @@ class ProductChecker:
         if not path:
             path = '/'
 
-        for def_key in d:
+        for def_key, def_value in d.items():
             check = self._check(
                 description=f'Checking attribute {path}.{def_key} exists'
             )
 
             if def_key not in f:
+                attr_props = self.get_attribute_props_from_placeholder(def_value)
+                if attr_props.optional:
+                    continue
+
                 check.passed = False
                 check.error = CheckError(
                     message=f'Attribute .{def_key} not in {path}',
