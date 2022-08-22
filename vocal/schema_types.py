@@ -1,9 +1,13 @@
+import sys
+
 from typing import NewType, Union
 
 import numpy as np
 
+def derived_str(typ, optional=False):
+    opt_str = ' optional' if optional else ''
+    return f'<{typ}: derived_from_file{opt_str}>'
 
-derived_str = lambda typ: f'<{typ}: derived_from_file>'
 DerivedType = NewType('DerivedType', str)
 DerivedString = DerivedType(derived_str('str'))
 DerivedInteger32 = DerivedType(derived_str('int32'))
@@ -11,6 +15,14 @@ DerivedInteger64 = DerivedType(derived_str('int64'))
 DerivedByte = DerivedType(derived_str('int8'))
 DerivedFloat32 = DerivedType(derived_str('float32'))
 DerivedFloat64 = DerivedType(derived_str('float64'))
+
+OptionalDerivedString = DerivedType(derived_str('str', optional=True))
+OptionalDerivedInteger32 = DerivedType(derived_str('int32', optional=True))
+OptionalDerivedInteger64 = DerivedType(derived_str('int64', optional=True))
+OptionalDerivedByte = DerivedType(derived_str('int8', optional=True))
+OptionalDerivedFloat32 = DerivedType(derived_str('float32', optional=True))
+OptionalDerivedFloat64 = DerivedType(derived_str('float64', optional=True))
+
 Numeric = Union[float, int]
 
 type_str = lambda typ: f'<{typ}>'
