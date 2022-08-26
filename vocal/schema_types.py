@@ -1,40 +1,55 @@
-import sys
-
-from typing import NewType, Union
+from typing import Union
 
 import numpy as np
 
-def derived_str(typ, optional=False):
+type_str = lambda typ: f'<{typ}>'
+
+def derived_type(typ, optional=False):
     opt_str = ' optional' if optional else ''
     return f'<{typ}: derived_from_file{opt_str}>'
 
-DerivedType = NewType('DerivedType', str)
-DerivedString = DerivedType(derived_str('str'))
-DerivedInteger32 = DerivedType(derived_str('int32'))
-DerivedInteger64 = DerivedType(derived_str('int64'))
-DerivedByte = DerivedType(derived_str('int8'))
-DerivedFloat32 = DerivedType(derived_str('float32'))
-DerivedFloat64 = DerivedType(derived_str('float64'))
+def derived_array(typ, optional=False):
+    opt_str = ' optional' if optional else ''
+    return f'<Array[{typ}]: derived_from_file{opt_str}>'
 
-OptionalDerivedString = DerivedType(derived_str('str', optional=True))
-OptionalDerivedInteger32 = DerivedType(derived_str('int32', optional=True))
-OptionalDerivedInteger64 = DerivedType(derived_str('int64', optional=True))
-OptionalDerivedByte = DerivedType(derived_str('int8', optional=True))
-OptionalDerivedFloat32 = DerivedType(derived_str('float32', optional=True))
-OptionalDerivedFloat64 = DerivedType(derived_str('float64', optional=True))
+DerivedString = derived_type('str')
+DerivedInteger32 = derived_type('int32')
+DerivedInteger64 = derived_type('int64')
+DerivedByte = derived_type('int8')
+DerivedFloat32 = derived_type('float32')
+DerivedFloat64 = derived_type('float64')
+
+OptionalDerivedString = derived_type('str', optional=True)
+OptionalDerivedInteger32 = derived_type('int32', optional=True)
+OptionalDerivedInteger64 = derived_type('int64', optional=True)
+OptionalDerivedByte = derived_type('int8', optional=True)
+OptionalDerivedFloat32 = derived_type('float32', optional=True)
+OptionalDerivedFloat64 = derived_type('float64', optional=True)
+
+DerivedStringArray = derived_array('str')
+DerivedInteger32Array = derived_array('int32')
+DerivedInteger64Array = derived_array('int64')
+DerivedByteArray = derived_array('int8')
+DerivedFloat32Array = derived_array('float32')
+DerivedFloat64Array = derived_array('float64')
+
+OptionalDerivedStringArray = derived_array('str', optional=True)
+OptionalDerivedInteger32Array = derived_array('int32', optional=True)
+OptionalDerivedInteger64Array = derived_array('int64', optional=True)
+OptionalDerivedByteArray = derived_array('int8', optional=True)
+OptionalDerivedFloat32Array = derived_array('float32', optional=True)
+OptionalDerivedFloat64Array = derived_array('float64', optional=True)
 
 Numeric = Union[float, int]
 
-type_str = lambda typ: f'<{typ}>'
-InfoType = NewType('InfoType', str)
-Byte = InfoType(type_str('int8'))
-Integer8 = InfoType(type_str('int8'))
-Integer16 = InfoType(type_str('int16'))
-Integer32 = InfoType(type_str('int32'))
-Integer64 = InfoType(type_str('int64'))
-Float32 = InfoType(type_str('float32'))
-Float64 = InfoType(type_str('float64'))
-String = InfoType(type_str('str'))
+Byte = type_str('int8')
+Integer8 = type_str('int8')
+Integer16 = type_str('int16')
+Integer32 = type_str('int32')
+Integer64 = type_str('int64')
+Float32 = type_str('float32')
+Float64 = type_str('float64')
+String = type_str('str')
 
 np_invert = {
     np.dtype('float32'): Float32,
