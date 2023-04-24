@@ -1,10 +1,8 @@
 """Initialise a vocal project."""
 
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 import os
 import sys
-
-from pydantic.types import NonNegativeFloat
 
 from . import parser_factory
 
@@ -39,6 +37,7 @@ from .dimension import Dimension
 
 DEFAULTS = """
 from vocal.schema_types import *
+from .attributes.constants import *
 
 # Add your attribute default values here:
 
@@ -55,7 +54,7 @@ from pydantic import BaseModel, Field
 
 from vocal.netcdf.mixins import DatasetNetCDFMixin
 
-from attributes import GlobalAttributes
+from ..attributes import GlobalAttributes
 
 from .dimension import Dimension
 from .group import Group
@@ -64,6 +63,9 @@ from .variable import Variable
 
 class DatasetMeta(BaseModel):
     file_pattern: str = Field(description='Canonical filename pattern for this dataset')
+    short_name: Optional[str] = Field(description='Unique hort name for this dataset')
+    description: Optional[str] = Field(description='Description of this dataset')
+    references: Optional[list[tuple[str, str]]] = Field(description='References for this dataset')
 
 
 class Dataset(BaseModel, DatasetNetCDFMixin):
@@ -84,7 +86,7 @@ from typing import Optional
 from pydantic import BaseModel
 from vocal.netcdf.mixins import GroupNetCDFMixin
 
-from attributes import GroupAttributes
+from ..attributes import GroupAttributes
 
 from .dimension import Dimension
 from .variable import Variable
@@ -117,7 +119,7 @@ from typing import List
 
 from vocal.netcdf.mixins import VariableNetCDFMixin
 
-from attributes import VariableAttributes
+from ..attributes import VariableAttributes
 
 
 class VariableMeta(BaseModel):
