@@ -72,7 +72,7 @@ def actual_range(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> Union[list
     return None
 
 def units(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> str:
-    if attrs.standard_name != 'time':
+    if getattr(attrs, 'standard_name', None) != 'time':
         return attrs.units
     return "seconds since 1970-01-01 00:00:00 +0000"
 
@@ -183,11 +183,11 @@ class VariableTrainingData:
         Populate the provided variable with data.
         """
 
-        if self.attrs.standard_name == 'time':
+        if getattr(self.attrs, 'standard_name', None) == 'time':
             self.var[:] = self._get_time()
             return
 
-        if self.attrs.flag_meanings: 
+        if getattr(self.attrs, 'flag_meanings', None): 
             self.var[:] = self._get_dummy_flag()
             return
 
