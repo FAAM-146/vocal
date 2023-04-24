@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from email.generator import Generator
 import enum
 from typing import Any, Iterable, Optional, Union
 from vocal.netcdf import NetCDFReader
@@ -300,9 +299,16 @@ class ProductChecker:
             )
 
             if def_key not in f:
-                attr_props = self.get_attribute_props_from_placeholder(def_value)
-                if attr_props.optional:
-                    continue
+                if isinstance(def_value, str) and def_value.startswith('<'):
+                    attr_props = self.get_attribute_props_from_placeholder(def_value)
+                    if attr_props.optional:
+                        continue
+                else:
+                    check.passed = False
+                    check.error = CheckError(
+                        message=f'Attribute .{def_key} not in {path}',
+                        path=f'{path}.{def_key}'
+                    )
 
                 check.passed = False
                 check.error = CheckError(
@@ -513,8 +519,8 @@ class ProductChecker:
             path: the path of the container in the netcdf file
         """
 
-        self.compare_attributes(d['attributes'], f['attributes'], path=path)
-        self.compare_variables(d['variables'], f['variables'], path=path)
+        self.compare_attributes(d.get('attributes', {}), f.get('attributes', {}), path=path)
+        self.compare_variables(d.get('variables', []), f.get('variables', []), path=path)
         self.compare_groups(d.get('groups', []), f.get('groups', []), path=path)
 
     def load_definition(self) -> dict:
