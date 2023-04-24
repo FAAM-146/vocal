@@ -10,6 +10,7 @@ from pydantic.error_wrappers import ValidationError
 from vocal.core import register_defaults_module
 from vocal.netcdf import NetCDFReader
 from vocal.checking import ProductChecker
+from vocal.utils import import_project
 from pydantic import BaseModel
 
 from . import parser_factory
@@ -97,25 +98,13 @@ def check_against_specification(specification: str, filename: str) -> bool:
 
     return pc.passing
 
-def get_datamodel() -> BaseModel:
-    
-    Dataset = importlib.import_module('models').Dataset
-
-    return Dataset
-
-def register_defaults() -> None:
-    try:
-        defaults = importlib.import_module('defaults')
-    except ModuleNotFoundError as e:
-        raise RuntimeError('Unable to import project attributes') from e
-
-    register_defaults_module(defaults)
 
 def check_file(args: Namespace) -> None:
-    sys.path.insert(0, args.project)
 
-    register_defaults()
-    ok1 = check_against_standard(model=get_datamodel(), filename=args.filename)
+    project = import_project(args.project)
+
+    register_defaults_module(project.defaults)
+    ok1 = check_against_standard(model=project.models.Dataset, filename=args.filename)
 
     if args.definition:
         ok2 = check_against_specification(args.definition, args.filename)
@@ -126,6 +115,7 @@ def check_file(args: Namespace) -> None:
         sys.exit(0)
     else:
         sys.exit(1)
+        
 
 def main() -> None:
     parser = parser_factory(

@@ -2,7 +2,7 @@
 
 import glob
 import os
-import importlib
+import importlib.util
 import sys
 
 from argparse import Namespace
@@ -10,22 +10,24 @@ from argparse import Namespace
 from . import parser_factory
 
 from vocal.core import ProductCollection, register_defaults_module
+from vocal.utils import import_project
 
 def create_vocabs(args: Namespace) -> None:
     project = args.project
     version = args.version
     output_dir = args.output_dir
 
-    sys.path.insert(0, project)
-
     try:
-        defaults = importlib.import_module('defaults')
+        module = import_project(project)
+        defaults = module.defaults
+        
+
     except ModuleNotFoundError as e:
         raise RuntimeError('Unable to import project defaults') from e
 
     register_defaults_module(defaults)
     try:
-        Dataset = importlib.import_module('models.dataset').Dataset
+        Dataset = module.models.Dataset
     except ModuleNotFoundError as e:
         raise RuntimeError('Unable to import project models') from e
 

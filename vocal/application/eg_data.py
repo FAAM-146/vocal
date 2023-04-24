@@ -5,6 +5,7 @@ from argparse import Namespace
 import sys
 
 from vocal.core import ProductDefinition, register_defaults_module
+from vocal.utils import import_project
 
 from . import parser_factory
 
@@ -13,19 +14,14 @@ def make_example_data(args: Namespace) -> None:
     definition = args.definition
     output = args.output
 
-    sys.path.insert(0, project)
-    # from models import Dataset
-    try:
-        Dataset = importlib.import_module('models').Dataset
-    except ModuleNotFoundError as e:
-        raise RuntimeError('Unable to import project attributes') from e
+    project = import_project(project)
 
     try:
-        defaults = importlib.import_module('defaults')
+        Dataset = project.models.Dataset
     except ModuleNotFoundError as e:
-        raise RuntimeError('Unable to import project attributes') from e
+        raise RuntimeError('Unable to import dataset schema') from e
 
-    register_defaults_module(defaults)
+    register_defaults_module(project.defaults)
 
     product = ProductDefinition(definition, Dataset)
     product.create_example_file(output, find_coords=args.find_coordinates)
