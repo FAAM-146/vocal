@@ -70,3 +70,16 @@ np_invert = {
     np.byte: Byte,
     list: list
 }
+
+def type_from_spec(spec):
+    spec = spec.replace('<', '').replace('>', '')
+    try:
+        return getattr(np, spec)
+    except AttributeError:
+        pass
+
+    if spec == 'str':
+        return str
+    
+    if spec == 'list':
+        return list
