@@ -33,7 +33,7 @@ class VariableNetCDFMixin:
         return dtypes[self.meta.datatype]
 
     def to_nc_container(
-        self: HasVariableAttributes, nc: netCDF4.Dataset, coordinates: Optional[str]
+        self: HasVariableAttributes, nc: netCDF4.Dataset, coordinates: Optional[str]=None
     ) -> netCDF4.Variable:
         print(f'creating variable {self.meta.name}')
 
