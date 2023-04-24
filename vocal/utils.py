@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import copy
+import importlib
 import os
 import re
-from typing import Any, Iterator, Mapping, TYPE_CHECKING, Type
+import sys
+
+from typing import Iterator, Type
+from types import ModuleType
 from dataclasses import dataclass
 from contextlib import contextmanager
 
@@ -136,3 +140,18 @@ def dataset_from_partial_yaml(
             return model.construct(**parse_definition(y))
         
         return model(**parse_definition(y))
+    
+
+def import_project(project: str) -> ModuleType:
+
+    module_path = os.path.join(project, '__init__.py')
+    if not module_path.startswith('/'):
+        module_path = os.path.join(os.getcwd(), module_path)
+
+
+    spec = importlib.util.spec_from_file_location(f"{project}", module_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+
+    return module
