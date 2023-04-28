@@ -74,7 +74,7 @@ class Dataset(BaseModel, DatasetNetCDFMixin):
 
     meta: DatasetMeta
     attributes: GlobalAttributes
-    dimensions: list[Dimension]
+    dimensions: Optional[list[Dimension]]
     groups: Optional[list[Group]]
     variables: list[Variable]
 """
