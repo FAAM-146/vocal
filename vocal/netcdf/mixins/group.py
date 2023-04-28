@@ -5,6 +5,9 @@ class GroupNetCDFMixin:
     def to_nc_container(self, nc):
         this_group = nc.createGroup(self.meta.name)
 
+        for dim in self.dimensions:
+            dim.to_nc_container(this_group)
+
         if self.groups is not None:
             for group in self.groups:
                 group.to_nc_container(this_group)
