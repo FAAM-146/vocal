@@ -130,7 +130,7 @@ class VariableMeta(BaseModel):
 
 class Variable(BaseModel, VariableNetCDFMixin):
     meta: VariableMeta
-    dimensions: List[str]
+    dimensions: Optional[List[str]]
     attributes: VariableAttributes
 """
 
