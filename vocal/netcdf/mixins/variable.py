@@ -25,6 +25,10 @@ class VariableNetCDFMixin:
             '<int64>': np.int64,
             '<int16>': np.int16,
             '<int8>': np.int8,
+            '<uint32>': np.uint32,
+            '<uint64>': np.uint64,
+            '<uint16>': np.uint16,
+            '<uint8>': np.uint8,
             '<byte>': np.byte,
             '<float32>': np.float32,
             '<float64>': np.float64
