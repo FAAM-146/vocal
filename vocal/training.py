@@ -148,8 +148,8 @@ class VariableTrainingData:
         """
         size = self._get_data_size()
         scale = np.round(10 * np.random.random())
-        x = np.linspace(0, 10*np.pi, num=np.prod(size))
-        return (scale * np.sin(x)).reshape(size)
+        x = np.linspace(0, 10*np.pi, num=int(np.prod(size)))
+        return (scale * np.sin(x)).reshape(size).astype(self.var.dtype)
 
     def _get_dummy_flag(self) -> numpy.typing.ArrayLike:
         """
