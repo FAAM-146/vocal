@@ -29,7 +29,7 @@ def default_value_factory(default: Any) -> Callable:
         if value != default:
             raise ValueError(f'Text is incorrect. Should read: "{default}"')
         return value
-    return _validator
+    return _randomize_object_name(_validator)
 
 def is_in_factory(collection: Collection) -> Callable:
     """
@@ -40,7 +40,7 @@ def is_in_factory(collection: Collection) -> Callable:
         if value not in collection:
             raise ValueError(f'Value should be in {collection}')
         return value
-    return _validator
+    return _randomize_object_name(_validator)
 
 def variable_exists_factory(variable_name: str) -> Callable:
     """
@@ -59,6 +59,50 @@ def variable_exists_factory(variable_name: str) -> Callable:
         raise ValueError(f'Variable \'{variable_name}\' not found in {name}')
 
     return _randomize_object_name(_validator)
+
+def variable_has_types_factory(variable_name: str, allowed_types: list[str]) -> Callable:
+    def _validator(cls, values):
+        variables = values.get('variables')
+        if variables is None:
+            return values
+        for var in variables:
+            var_name = var.meta.name
+            var_type = var.meta.datatype
+            if var_name != variable_name:
+                continue
+            if var_type not in allowed_types:
+                raise ValueError(
+                    f'Expected datatype of variable "{variable_name}" to be '
+                    f'one of [{",".join(allowed_types)}], got {var_type}'
+                )
+        return values
+    return _randomize_object_name(_validator)
+
+def variable_has_dimensions_factory(variable_name: str, dimensions: [list[str]]) -> Callable:
+    def _validator(cls, values):
+        variables = values.get('variables')
+        if variables is None:
+            return values
+        for var in variables:
+            if var.meta.name != variable_name:
+                continue
+
+            var_dims = var.dimensions
+            for dim in dimensions:
+                if dim not in var_dims:
+                    raise ValueError(
+                        f'Expected variable "{variable_name}" to have dimension "{dim}"'
+                    )
+
+            for dim in var_dims:
+                if dim not in dimensions:
+                    raise ValueError(
+                        f'Variable "{variable_name}" has unexpected dimension '
+                        f'{dim}'
+                    )
+        return values
+    return _randomize_object_name(_validator)
+
 
 def group_exists_factory(group_name: str) -> Callable:
     """
