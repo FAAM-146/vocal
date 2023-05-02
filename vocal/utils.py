@@ -155,3 +155,56 @@ def import_project(project: str) -> ModuleType:
     spec.loader.exec_module(module)
 
     return module
+
+def get_error_locs(err: pydantic.ValidationError, unvalidated: pydantic.BaseModel) -> list[tuple[str], tuple[str]]:
+    """
+    Get the locations of errors in a ValidationError object. Try to get the
+    name of the variable that the error is associated with, if possible.
+
+    Args:
+        err: The ValidationError object
+        unvalidated: The unvalidated model
+
+    Returns:
+        A list of tuples, where the first element is the location of the error
+        and the second element is the error message.
+    """
+
+    return_data = ([], [])
+    for e in err.errors():
+        ncn = unvalidated.copy(deep=True)
+        
+        locs = []
+
+        for i in e['loc']:
+            current_name = None
+
+            try:
+                ncn = ncn[i]
+            except Exception:
+                pass
+
+            try:
+                ncn = getattr(ncn, i)
+            except Exception:
+                pass
+                   
+            try:
+                current_name = ncn['meta']['name']
+            except (AttributeError, TypeError, KeyError):
+                pass
+
+            if i == '__root__':
+                current_name = '[root validator]'
+
+            if current_name:
+                locs.append(current_name)
+            else:
+                locs.append(i)
+
+
+        loc = 'root -> ' + ' -> '.join([str(i) for i in locs])
+        return_data[0].append(loc)
+        return_data[1].append(e['msg'])
+
+    return return_data
