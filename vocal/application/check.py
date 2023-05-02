@@ -53,19 +53,76 @@ class Printer:
         print(*args, **kwargs)
 
 p = Printer()
-    
+
+def _get_error_locs(err: ValidationError, unvalidated: BaseModel) -> list[tuple[str], tuple[str]]:
+    """
+    Get the locations of errors in a ValidationError object. Try to get the
+    name of the variable that the error is associated with, if possible.
+
+    Args:
+        err: The ValidationError object
+        unvalidated: The unvalidated model
+
+    Returns:
+        A list of tuples, where the first element is the location of the error
+        and the second element is the error message.
+    """
+
+    return_data = ([], [])
+    for e in err.errors():
+        ncn = unvalidated.copy(deep=True)
+        
+        locs = []
+
+        for i in e['loc']:
+            current_name = None
+
+            try:
+                ncn = ncn[i]
+            except Exception:
+                pass
+
+            try:
+                ncn = getattr(ncn, i)
+            except Exception:
+                pass
+                   
+            try:
+                current_name = ncn['meta']['name']
+            except (AttributeError, TypeError, KeyError):
+                pass
+
+            if i == '__root__':
+                current_name = '[root validator]'
+
+            if current_name:
+                locs.append(current_name)
+            else:
+                locs.append(i)
+
+
+        loc = 'root -> ' + ' -> '.join([str(i) for i in locs])
+        return_data[0].append(loc)
+        return_data[1].append(e['msg'])
+
+    return return_data
 
 def check_against_standard(model: BaseModel, filename: str) -> bool:
     p.print_line(LINE_LEN, '-')
     p.print(f'Checking {filename} against standard... ', end='')
     nc = NetCDFReader(filename)
+    
     try:
+        nc_noval = nc.to_model(model, validate=False) # type: ignore
         nc.to_model(model) # type: ignore
     except ValidationError as err:
         p.print_err('ERROR')
-        for e in err.errors():
-            loc = ' --> ' + ' -> '.join([str(i) for i in e['loc']])
-            p.print_err(f'{loc}: {e["msg"]}')
+
+        error_locs = _get_error_locs(err, nc_noval)
+
+        for err_loc, err_msg in zip(*error_locs):
+            p.print_err(f'{err_loc}: {err_msg}')
+
         p.print_line(LINE_LEN, '-')
         return False
     else:
