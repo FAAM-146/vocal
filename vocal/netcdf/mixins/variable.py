@@ -1,4 +1,6 @@
 from typing import Any, Optional, Protocol
+import datetime
+
 import netCDF4 # type: ignore
 import numpy as np
 import numpy.typing
@@ -78,6 +80,12 @@ class VariableNetCDFMixin:
 
             if attr in ('_FillValue', 'FillValue'):
                 continue
+
+            if isinstance(value, datetime.date):
+                value = value.strftime('%Y-%m-%d')
+
+            if isinstance(value, datetime.datetime):
+                value = value.strftime('%Y-%m-%dT%H:%M:%SZ')
 
             setattr(var, attr, value)
 
