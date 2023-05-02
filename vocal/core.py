@@ -18,6 +18,7 @@ from .writers import VocabularyCreator
 # from .dataset import Dataset as _Dataset
 # from .netcdf import NetCDFReader
 # from vocal import group
+from .utils import get_error_locs
 
 ATTRIBUTE_TYPES = ('group', 'variable', 'globals')
 
@@ -110,11 +111,14 @@ class ProductDefinition:
         try:
             self()
         except ValidationError as err:
+            nc_noval = self.construct()
+
             errors = True
             print(f'Error in dataset: {self.path}')
-            for e in err.errors():
-                loc = ' -> '.join([str(i) for i in e['loc']])
-                print(f'{loc}: {e["msg"]}')
+
+            error_locs = get_error_locs(err, nc_noval)
+            for err_loc, err_msg in zip(*error_locs):
+                print(f'{err_loc}: {err_msg}')
 
         if errors:
             raise ValueError('Failed to validate dataset')
