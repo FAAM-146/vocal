@@ -144,6 +144,7 @@ def dimension_exists_factory(dimension_name: str) -> Callable:
 # Shortcut defining a validator with allow_reuse set as True
 re_validator = functools.partial(validator, allow_reuse=True)
 re_root_validator = functools.partial(root_validator, allow_reuse=True)
+substitutor = functools.partial(root_validator, allow_reuse=True, pre=True)
 
 def substitute_placeholders(cls, values: dict) -> dict:
     """
