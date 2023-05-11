@@ -78,7 +78,7 @@ def variable_has_types_factory(variable_name: str, allowed_types: list[str]) -> 
         return values
     return _randomize_object_name(_validator)
 
-def variable_has_dimensions_factory(variable_name: str, dimensions: [list[str]]) -> Callable:
+def variable_has_dimensions_factory(variable_name: str, dimensions: list[str]) -> Callable:
     def _validator(cls, values):
         variables = values.get('variables')
         if variables is None:
