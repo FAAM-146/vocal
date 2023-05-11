@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-from typing import Iterator, Type
+from typing import Iterator, Type, Generator
 from types import ModuleType
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -208,3 +208,27 @@ def get_error_locs(err: pydantic.ValidationError, unvalidated: pydantic.BaseMode
         return_data[1].append(e['msg'])
 
     return return_data
+
+
+@contextmanager
+def flip_to_dir(path: str) -> Generator[str, None, None]:
+    """
+    A context manager which temporarily changes the working directory.
+
+    Args:
+        path: the path to change to
+
+    Yields:
+        the current working directory
+    """
+    if not os.path.isdir(path):
+        raise ValueError(f'{path} is not a directory')
+
+    cwd = os.getcwd()
+    try:
+        os.chdir(path)
+        yield cwd
+    except Exception:
+        raise
+    finally:
+        os.chdir(cwd)
