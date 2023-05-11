@@ -1,0 +1,13 @@
+name: vocal
+channels:
+  - defaults
+dependencies:
+  - python=3.10.8
+  - tzdata=2023c
+  - udunits2=2.2.25
+  - pip=23.0.1
+  - pip:
+    - pip==23.0.1
+    - setuptools==66.0.0
+    - wheel==0.38.4
+    - git+https://github.com/FAAM-146/vocal.git
