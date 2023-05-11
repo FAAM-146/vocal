@@ -12,16 +12,38 @@ from . import parser_factory
 from vocal.core import ProductCollection, register_defaults_module
 from vocal.utils import import_project
 
+def resolve_full_path(path: str) -> str:
+    """
+    Resolve a path to a full path if it is not already.
+
+    Args:
+        path: The path to resolve
+    
+    Returns:
+        The resolved path
+    """
+
+    if not path.startswith('/'):
+        path = os.path.join(os.getcwd(), path)
+    return path
+
+
 def create_vocabs(args: Namespace) -> None:
-    project = args.project
+    project = resolve_full_path(args.project)
     version = args.version
     output_dir = args.output_dir
+    defs_dir = args.definitions
+
+    if not os.path.isdir(project):
+        raise ValueError(
+            f'Project directory {project} does not exist'
+             'please supply the full path to a vocal project directory'
+        )
 
     try:
         module = import_project(project)
         defaults = module.defaults
         
-
     except ModuleNotFoundError as e:
         raise RuntimeError('Unable to import project defaults') from e
 
@@ -31,7 +53,11 @@ def create_vocabs(args: Namespace) -> None:
     except ModuleNotFoundError as e:
         raise RuntimeError('Unable to import project models') from e
 
-    defs_dir = os.path.join(project, 'definitions')
+    if not defs_dir:
+        defs_dir = os.path.join(project, 'definitions')
+    
+    defs_dir = resolve_full_path(defs_dir)
+    
     defs_glob = os.path.join(defs_dir, '*.yaml')
 
     collection = ProductCollection(model=Dataset, version=version)
@@ -62,6 +88,13 @@ def main() -> None:
     parser.add_argument(
         'project', type=str, metavar='PROJECT',
         help='The path of a vocal project for which to create vocabularies'
+    )
+
+    parser.add_argument(
+        '-d', '--definitons', type=str, metavar='DEFINITION',
+        dest='definitions',
+        help=('The folder to look in for product definitions. '
+              'Defaults to <project>/definitions')
     )
 
     parser.add_argument(
