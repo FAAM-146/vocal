@@ -48,7 +48,7 @@ The conda environment can then be activated as above, providing the `vocal` scri
 
 ### With pip
 
-Vocal can also be installed with pip, though in this instance you are responsible for ensuring
+*Vocal* can also be installed with pip, though in this instance you are responsible for ensuring
 that the required [udunits2](https://www.unidata.ucar.edu/software/udunits/) library is available
 on your system.
 
@@ -59,7 +59,7 @@ manager such as [Virtualenv](https://pypi.org/project/virtualenv/).
 
 ## Vocal projects
 
-*Vocal* uses vocal projects to define standards for netCDF data. *Vocal* projects are comprised of 
+*Vocal* uses *vocal projects* to define standards for netCDF data. *Vocal* projects are comprised of 
 [pydantic](https://docs.pydantic.dev/) model definitions, and associated validators. *Vocal*
 then provides a mapping from netCDF data to these models, allowing the power of pydantic to
 be used for compliance checking.
@@ -86,14 +86,14 @@ directory named `project_name` with the following structure:
     ./definitions
     ./defaults.py
 
-The models directory contains the pydantic models for the which define the dataset,
+The models directory contains the pydantic models which define the dataset,
 groups, dimensions and variables. The attributes directory contains the pydantic models
 for the attributes associated with the dataset (globals), groups and variables.
 
 The definitions directory is the standard location for the working copies of
 definitions of individual data products, though this location can be at runtime.
 
-For more information on building vocal projects, see the section on [vocal projects](#vocal-projects).
+For more information on building *vocal* projects, see the section on [vocal projects](#vocal-projects-details).
 
 ## Specifying data products
 
@@ -131,7 +131,7 @@ An simple example of a product definition may be
             - height
 
 This definition specifies a single required variable, `example_variable`, with dimensions `time` and `height`. Attributes may be literal values, or may be a placeholder indicating
-that the value may change between file. In this case, the `comment` attribute is derived from the file. A typical attribute placeholder is `<str: derived_from_file optional>`, which indicates that the attribute is a string, and that it is optional.
+that the value may change between files. In this case, the `comment` attribute is derived from the file. A typical attribute placeholder is `<str: derived_from_file optional>`, which indicates that the attribute is a string, and that it is optional. Array-valued attributes are also supported, for example `<Array[int8]: derived_from_file optional>` indicates that the attribute is an array of 8-bit integers, and is optional.
 
 ### Versioning data product definitions
 
@@ -145,11 +145,18 @@ This will create a directory named `<output_dir>/<version>` containing the versi
 
 ## Checking data products
 
-Vocal can be used to check netCDF files against vocal projects and data product definitions. To do this, use the `check` command:
+*Vocal* can be used to check netCDF files against *vocal* projects and data product definitions. To do this, use the `check` command:
 
     $ vocal check <file> -p <project_name> -d <definition>
 
-This will check the file against the project and definition specified. If the file is valid, the command will return with exit code 0. If the file is invalid, the command will return with exit code 1, and a list of errors will be printed to the console.
+This will check the file against the project and definition specified. If the file is valid, the command will return with exit code 0. If the file is invalid, the command will return with exit code 1. When checking against a product
+definition, all of the checks will be printed to the console. You can limit the output to warnings and errors only by using the `-w` flag, to errors only by using the `-e` flag, or to no output by using the `-q` flag.
+
+For example,
+
+    $ vocal check <file> -p <project_name> -d <definition> -e
+
+will check the file against the project and definition specified, and will only print errors to the console.
 
 A file can also be checked only against a project, without a data product definition:
 
@@ -170,3 +177,10 @@ Any errors will be printed to the console, indicating where in the file the erro
     root -> groups -> instrument_group_1 -> attributes -> instrument_name: field required
     --------------------------------------------------
 
+## Creating example data
+
+*Vocal* can be used to create example data files from *vocal* projects and data product definitions. To do this, use the `eg_data` command:
+
+    $ vocal eg_data -p <project_name> -d <definition> -o <output_file>
+
+This will create a netCDF file with sinusoidal data for each variable in the data product definition. 
