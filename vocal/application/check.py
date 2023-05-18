@@ -3,6 +3,7 @@
 from argparse import Namespace
 from dataclasses import dataclass
 import importlib
+import os
 import sys
 
 from pydantic.error_wrappers import ValidationError
@@ -21,44 +22,90 @@ LINE_LEN = 50
 
 @dataclass
 class Printer:
+    """
+    A class for printing messages to the terminal, with options for
+    suppressing certain types of messages.
+    """
     quiet: bool = False
     ignore_info: bool = False
     ignore_warnings: bool = False
 
     def print_line(self, len: int=50, token: str='-'):
+        """
+        Print a line of a given length, with a given token.
+
+        Args:
+            len (int): The length of the line.
+            token (str): The token to use.
+
+        Returns:
+            None
+        """
         if self.quiet or self.ignore_info:
             return
         print(token * len)
 
     def print_line_err(self, len: int=50, token: str='-'):
+        """
+        Print a line of a given length, with a given token.
+
+        Args:
+            len (int): The length of the line.
+            token (str): The token to use.
+
+        Returns:
+            None
+        """
         if self.quiet:
             return
         print(token * len)
 
     def print(self, *args, **kwargs):
+        """
+        Print a message.
+        """
         if self.quiet or self.ignore_info:
             return
 
         print(*args, **kwargs)
         
     def print_err(self, *args, **kwargs):
+        """
+        Print a message in not quiet mode.
+        """
         if self.quiet:
             return
 
         print(*args, **kwargs)
 
     def print_warn(self, *args, **kwargs):
+        """
+        Print a message in not quiet or error mode.
+        """
         if self.quiet or self.ignore_warnings:
             return
 
         print(*args, **kwargs)
 
+
 p = Printer()
 
 
-def check_against_standard(model: BaseModel, filename: str) -> bool:
+def check_against_standard(model: BaseModel, filename: str, project_name: str='') -> bool:
+    """
+    Check a netCDF file against a standard (a vocal/pydantic model).
+
+    Args:
+        model (BaseModel): The model to check against.
+        filename (str): The path of the netCDF file to check.
+        project_name (str): The name of the project to check against.
+
+    Returns:
+        bool: True if all checks pass, False otherwise.
+    """
+
     p.print_line(LINE_LEN, '-')
-    p.print(f'Checking {filename} against standard... ', end='')
+    p.print(f'Checking {filename} against {project_name} standard... ', end='')
     nc = NetCDFReader(filename)
     
     try:
@@ -79,7 +126,18 @@ def check_against_standard(model: BaseModel, filename: str) -> bool:
         p.print_line(LINE_LEN, '-')
         return True
 
+
 def check_against_specification(specification: str, filename: str) -> bool:
+    """
+    Check a netCDF file against a product specification.
+
+    Args:
+        specification (str): The path of the specification to check against.
+        filename (str): The path of the netCDF file to check.
+
+    Returns:
+        bool: True if all checks pass, False otherwise.
+    """
     pc = ProductChecker(specification)
     pc.check(filename)
     
@@ -106,24 +164,46 @@ def check_against_specification(specification: str, filename: str) -> bool:
 
 
 def check_file(args: Namespace) -> None:
+    """
+    Check a file against standard and/or product definition.
 
-    project = import_project(args.project)
+    Args:
+        args (Namespace): The parsed command line arguments.
 
-    register_defaults_module(project.defaults)
-    ok1 = check_against_standard(model=project.models.Dataset, filename=args.filename)
+    Exit:
+        0 if all checks pass, 1 otherwise.
+    """
+
+    all_ok1 = []
+    for proj in args.project:
+        try:
+            project = import_project(proj) 
+        except Exception:
+            p.print_err(f'Could not import vocal project at "{proj}"')
+            p.print_err('Please check that the project exists and is importable.')
+            raise
+        register_defaults_module(project.defaults)
+        all_ok1.append(
+            check_against_standard(
+                model=project.models.Dataset, filename=args.filename,
+                project_name=os.path.basename(proj)
+            )
+        )
+
+    ok1 = all(all_ok1)
+    ok2 = True
 
     if args.definition:
         ok2 = check_against_specification(args.definition, args.filename)
-    else:
-        ok2 = True
 
-    if ok1 and ok2:
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    sys.exit(int(not (ok1 and ok2)))
         
 
 def main() -> None:
+    """
+    Main entry point for the vocal check command.
+    """
+
     parser = parser_factory(
         name='check',
         description='Check a file against standard and/or product definition'
@@ -135,8 +215,9 @@ def main() -> None:
     )
 
     parser.add_argument(
-        '-p' , '--project', dest='project', type=str, metavar='PROJECT',
-        help='Path to the vocal project, defaults to current directory.', default='.'
+        '-p' , '--project', dest='project', type=str, metavar='PROJECT', 
+        nargs='+', action='store', default=['.'],
+        help='Path to one or more vocal projects, defaults to current directory'
     )
 
     parser.add_argument(
