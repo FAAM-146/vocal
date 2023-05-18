@@ -10,7 +10,7 @@ setup(
     packages=['vocal', 'vocal.application', 'vocal.netcdf', 'vocal.netcdf.mixins'],
     scripts=['scripts/vocal'],
     install_requires=[
-        'netCDF4>=1.6.3',
+        'netCDF4>=1.6.2',
         'pydantic>=1.10.7',
         'pyyaml>=6.0',
         'numpy>=1.24.3',
