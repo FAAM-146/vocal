@@ -1,4 +1,4 @@
-"""Create versioned JSON vocabularies for a vocal project"""
+"""Create versioned JSON product specifications."""
 
 import glob
 import os
@@ -28,7 +28,7 @@ def resolve_full_path(path: str) -> str:
     return path
 
 
-def create_vocabs(args: Namespace) -> None:
+def create_version(args: Namespace) -> None:
     project = resolve_full_path(args.project)
     version = args.version
     output_dir = args.output_dir
@@ -74,15 +74,15 @@ def create_vocabs(args: Namespace) -> None:
     try:
         collection.write_product_definitions()
     except Exception as e:
-        raise RuntimeError('Failed to create vocabularies') from e
+        raise RuntimeError('Failed to create versioned products') from e
     finally:
         os.chdir(cwd)
         
 
 def main() -> None:
     parser = parser_factory(
-        name='create_vocabs',
-        description='Create versioned JSON vocabularies for a vocal project'
+        name='create_version',
+        description='Create versioned JSON product specifications.'
     )
 
     parser.add_argument(
@@ -99,15 +99,14 @@ def main() -> None:
 
     parser.add_argument(
         '-v', '--version', type=str, required=True, metavar='VERSION', dest='version',
-        help='The vocabulary version, e.g. 1.0'
+        help='The product version, e.g. 1.0'
     )
 
     parser.add_argument(
         '-o', '--output-dir', type=str, default='.', metavar='OUTPUT_DIR', dest='output_dir',
-        help='The directory to write the vocabularies to.'
+        help='The directory to write the versioned definitions to.'
     )
-
 
     args = parser.parse_args(sys.argv[2:])
 
-    create_vocabs(args)
+    create_version(args)

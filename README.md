@@ -25,7 +25,7 @@ This should result in the `vocal` script being available in your `PATH`:
     Available commands are:
 
     * check           - Check a netCDF file against standard and product definitions.
-    * create_vocabs   - Create versioned JSON vocabularies for a vocal project
+    * create_version  - Create versioned JSON product specifications.
     * eg_data         - Create an example data file from a definition.
     * init            - Initialise a vocal project.
 
@@ -137,9 +137,9 @@ that the value may change between files. In this case, the `comment` attribute i
 
 The 'working' copy of a data product definition is typically stored in the `definitions` directory. However, it is possible that a data product definition may change over time. For example, a new version of a standard may be released, or a data product may be updated to include new variables. In this case, it is useful to be able to track the changes between versions of a data product definition.
 
-To create a versioned copy of a data product definition, use the `vocal create_vocabs` command.
+To create a versioned copy of a data product definition, use the `vocal create_version` command.
 
-    $ vocal create_vocabs -d <project_name> -v <version> -o <output_dir>
+    $ vocal create_version -d <project_name> -v <version> -o <output_dir>
 
 This will create a directory named `<output_dir>/<version>` containing the versioned data product definition, as well as a `latest` directory containing a copy of the latest versions. The versioned data product definition is a JSON file, and is intended to be used with the `check` command. Additionally a `dataset_schema.json` file is created, which is a JSON Schema representation of the pydantic model for the dataset, minus any validators.
 
