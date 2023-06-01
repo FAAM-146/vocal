@@ -29,6 +29,7 @@ class Printer:
     quiet: bool = False
     ignore_info: bool = False
     ignore_warnings: bool = False
+    comments: bool = False
 
     def print_line(self, len: int=50, token: str='-'):
         """
@@ -76,6 +77,15 @@ class Printer:
         if self.quiet:
             return
 
+        print(*args, **kwargs)
+
+    def print_comment(self, *args, **kwargs):
+        """
+        Print a comment if comments are on
+        """
+        if self.quiet or not self.comments:
+            return
+        
         print(*args, **kwargs)
 
     def print_warn(self, *args, **kwargs):
@@ -154,6 +164,10 @@ def check_against_specification(specification: str, filename: str) -> bool:
             p.print_err('ERROR', end='')
             p.print_err(f' --> {check.error.path}: {check.error.message}')
 
+    p.print_err()
+    for comment in pc.comments:
+        p.print_comment(f'COMMENT: {comment.path}: {comment.message}')
+        p.print_comment()
     p.print_line_err(LINE_LEN, '=')
     p.print_err(f'{len(pc.checks)} checks.')
     p.print_err(f'{len(pc.warnings)} warnings.')
@@ -241,12 +255,19 @@ def main() -> None:
         help='Do not print any output'
     )
 
+    parser.add_argument(
+        '-c', '--comments', action='store_true',
+        help='Print comments'
+    )
+
     args = parser.parse_args(sys.argv[2:])
     if args.error_only:
         p.ignore_info = True
         p.ignore_warnings = True
     if args.warnings:
         p.ignore_info = True
+    if args.comments:
+        p.comments = True
 
     p.quiet = args.quiet
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import enum
 from typing import Any, Iterable, Optional, Union
 from vocal.netcdf import NetCDFReader
-from vocal.schema_types import np_invert
+from vocal.schema_types import type_from_spec, np_invert
 
 import json
 import re
@@ -66,6 +66,15 @@ class CheckWarning:
 
 
 @dataclass
+class CheckComment:
+    """
+    Represents a comment in a check
+    """
+    message: str
+    path: str
+
+
+@dataclass
 class Check:
     """
     Represents a single check
@@ -73,8 +82,10 @@ class Check:
     description: str
     passed: bool = True
     has_warning: bool = False
+    has_comment: bool = False
     error: Union[CheckError, None] = None
     warning: Union[CheckWarning, None] = None
+    comment: Union[CheckComment, None] = None
 
 
 @dataclass
@@ -137,6 +148,17 @@ class ProductChecker:
             raise NotCheckedError('Checks have not been performed')
 
         return [i.error for i in self.checks if not i.passed]  # type: ignore
+    
+    @property
+    def comments(self) -> list[CheckComment]:
+        """
+        Returns a list of CheckComments for checks which have comments on them, or
+        raises a NotCheckedError if no checks have been carried out
+        """
+        if not self.checks:
+            raise NotCheckedError('Checks have not been performed')
+        
+        return [i.comment for i in self.checks if i.has_comment]
 
 
     def _check(self, description:str, passed: bool=True, error: Optional[CheckError] = None) -> Check:
@@ -401,8 +423,12 @@ class ProductChecker:
             path: the full path to the variable in the netCDF
         """
 
-        expected_dtype = d['meta']['datatype']
-        actual_dtype = f['meta']['datatype']
+        expected_type_str = d['meta']['datatype']
+        actual_type_str = f['meta']['datatype']
+
+        expected_dtype = type_from_spec(expected_type_str)
+        actual_dtype = type_from_spec(actual_type_str)
+
         check = self._check(
             description=f'Checking datatype of {path}'
         )
@@ -411,6 +437,14 @@ class ProductChecker:
             check.passed = False
             check.error = CheckError(
                 f'Incorrect datatype. Found {actual_dtype}, expected {expected_dtype}',
+                path
+            )
+
+        if actual_type_str != expected_type_str:
+            check.has_comment = True
+            check.comment = CheckComment(
+                (f'Found datatype {actual_type_str}. Specification denotes expected '
+                 f'datatype as {expected_type_str}, but these are considered equivalent.'),
                 path
             )
 

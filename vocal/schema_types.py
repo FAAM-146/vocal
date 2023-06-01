@@ -1,3 +1,5 @@
+import re
+
 from typing import Union
 
 import numpy as np
@@ -112,14 +114,20 @@ np_invert = {
 }
 
 def type_from_spec(spec):
-    spec = spec.replace('<', '').replace('>', '')
+    
+    rex = '<(?:Array)?\[?([a-z0-9]+)\]?:?.*?>'
     try:
-        return getattr(np, spec)
+        str_type = re.search(rex, spec).groups()[0]
     except AttributeError:
-        pass
-
-    if spec == 'str':
+        return None
+    
+    if str_type == 'str':
         return str
     
-    if spec == 'list':
+    if str_type == 'list':
         return list
+    
+    try:
+        return getattr(np, str_type)
+    except AttributeError:
+        return None
