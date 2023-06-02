@@ -14,7 +14,7 @@ TIME_END = 3601
 
 NT = TIME_END - TIME_START
 
-def geospatial(nc: netCDF4.Dataset, axis: str, extrema: str, attrs) -> Union[float, None]:
+def geospatial(nc: netCDF4.Dataset, axis: str, extrema: str) -> Union[np.float32, None]:
     """
     Defines a function generic which can be partially completed to provide 
     functions which search the netcdf container for coordinate variables and
@@ -58,37 +58,40 @@ geospatial_lat_min = partial(geospatial, axis='Y', extrema='min')
 geospatial_vertical_max = partial(geospatial, axis='Z', extrema='max')
 geospatial_vertical_min = partial(geospatial, axis='Z', extrema='min')
 
-def revision_number(nc: netCDF4.Dataset, attrs: pydantic.BaseModel) -> np.int32:
-    return np.int32(attrs.revision_number)
+def revision_number(_: netCDF4.Dataset, attrs: pydantic.BaseModel) -> np.int32:
+    revision_number = getattr(attrs, 'revision_number', 0)
+    return np.int32(revision_number)
 
 def actual_range(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> Union[list[Any], None]:
     try:
-        if attrs.standard_name == 'time':
+        if getattr(attrs, 'standard_name', None) == 'time':
             return None
     except AttributeError:
         pass
-    if attrs.flag_meanings is None:
+
+    if getattr(attrs, 'flag_meanings', True) is None:
         return [np.min(var), np.max(var)]
     return None
 
 def units(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> str:
     if getattr(attrs, 'standard_name', None) != 'time':
-        return attrs.units
+        return getattr(attrs, 'units')
     return "seconds since 1970-01-01 00:00:00 +0000"
 
-def flag_masks(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> list[np.int8]:
-    if attrs.flag_masks is None:
+def flag_masks(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> list[np.int8] | None:
+    if getattr(attrs, 'flag_masks', None) is None:
         return None
+    
     try:
-        return [np.int8(2**i) for i, _ in enumerate(attrs.flag_meanings.split())]
+        return [np.int8(2**i) for i, _ in enumerate(getattr(attrs, 'flag_meanings').split())]
     except (AttributeError, TypeError):
         return None
 
-def flag_values(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> list[np.int8]:
-    if attrs.flag_values is None:
+def flag_values(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> list[np.int8] | None:
+    if getattr(attrs, 'flag_values', None) is None:
         return None
     try:
-        return [np.int8(2**i) for i, _ in enumerate(attrs.flag_meanings.split())]
+        return [np.int8(2**i) for i, _ in enumerate(getattr(attrs, 'flag_meanings').split())]
     except (AttributeError, TypeError):
         return None        
 

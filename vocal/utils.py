@@ -79,7 +79,7 @@ class FolderManager:
         finally:
             os.chdir(cwd)
 
-def get_type_from_placeholder(placeholder: str) -> str:
+def get_type_from_placeholder(placeholder: str) -> tuple[str, str]:
         """
         Returns the type from a placeholder string. 
 
@@ -145,19 +145,29 @@ def dataset_from_partial_yaml(
 
 def import_project(project: str) -> ModuleType:
 
+    import_error_msg = f"Unable to import project {project}"
+
     module_path = os.path.join(project, '__init__.py')
     if not module_path.startswith('/'):
         module_path = os.path.join(os.getcwd(), module_path)
 
 
     spec = importlib.util.spec_from_file_location(f"{project}", module_path)
+    if spec is None:
+        raise ImportError(import_error_msg)
+    try:
+        if spec.loader is None:
+            raise ImportError(import_error_msg)
+    except AttributeError:
+        raise ImportError(import_error_msg)
+    
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
 
     return module
 
-def get_error_locs(err: pydantic.ValidationError, unvalidated: pydantic.BaseModel) -> list[tuple[str], tuple[str]]:
+def get_error_locs(err: pydantic.ValidationError, unvalidated: pydantic.BaseModel) -> tuple[list[str], list[str]]:
     """
     Get the locations of errors in a ValidationError object. Try to get the
     name of the variable that the error is associated with, if possible.
@@ -171,7 +181,8 @@ def get_error_locs(err: pydantic.ValidationError, unvalidated: pydantic.BaseMode
         and the second element is the error message.
     """
 
-    return_data = ([], [])
+    return_data: tuple[list[str], list[str]] = ([], [])
+
     for e in err.errors():
         ncn = unvalidated.copy(deep=True)
         
@@ -181,17 +192,17 @@ def get_error_locs(err: pydantic.ValidationError, unvalidated: pydantic.BaseMode
             current_name = None
 
             try:
-                ncn = ncn[i]
+                ncn = ncn[i] # type: ignore
             except Exception:
                 pass
 
             try:
-                ncn = getattr(ncn, i)
+                ncn = getattr(ncn, i) # type: ignore
             except Exception:
                 pass
                    
             try:
-                current_name = ncn['meta']['name']
+                current_name = ncn['meta']['name'] # type: ignore
             except (AttributeError, TypeError, KeyError):
                 pass
 
