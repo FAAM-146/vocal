@@ -4,13 +4,18 @@ from typing import Union
 
 import numpy as np
 
+class UnknownDataType(Exception):
+    """
+    Raised when an unknown type is specified in a schema.
+    """
+
 type_str = lambda typ: f'<{typ}>'
 
-def derived_type(typ, optional=False):
+def derived_type(typ: str, optional: bool=False) -> str:
     opt_str = ' optional' if optional else ''
     return f'<{typ}: derived_from_file{opt_str}>'
 
-def derived_array(typ, optional=False):
+def derived_array(typ: str, optional: bool=False) -> str:
     opt_str = ' optional' if optional else ''
     return f'<Array[{typ}]: derived_from_file{opt_str}>'
 
@@ -113,7 +118,7 @@ np_invert = {
     list: list
 }
 
-def type_from_spec(spec):
+def type_from_spec(spec: str) -> type:
     
     rex = '<(?:Array)?\[?([a-z0-9]+)\]?:?.*?>'
     try:
@@ -130,4 +135,4 @@ def type_from_spec(spec):
     try:
         return getattr(np, str_type)
     except AttributeError:
-        return None
+        raise UnknownDataType(f'Unknown type: {str_type}')
