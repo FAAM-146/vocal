@@ -122,9 +122,13 @@ def type_from_spec(spec: str) -> type:
     
     rex = '<(?:Array)?\[?([a-z0-9]+)\]?:?.*?>'
     try:
-        str_type = re.search(rex, spec).groups()[0]
-    except AttributeError:
-        return None
+        _str_type = re.search(rex, spec)
+        if _str_type is None:
+            raise UnknownDataType(f'Unknown type: {spec}')
+        
+        str_type = _str_type.groups()[0]
+    except (AttributeError, IndexError):
+        raise UnknownDataType(f'Unknown type: {spec}')
     
     if str_type == 'str':
         return str
