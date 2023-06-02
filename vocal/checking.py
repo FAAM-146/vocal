@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import enum
 from typing import Any, Iterable, Optional, Union
 from vocal.netcdf import NetCDFReader
-from vocal.schema_types import type_from_spec, np_invert
+from vocal.schema_types import UnknownDataType, type_from_spec, np_invert
 
 import json
 import re
@@ -12,6 +12,7 @@ PLACEHOLDER_RE = ('<(?P<container>Array)?'
                   ': derived_from_file'
                   '\s?'
                   '(?P<additional>.*)>')
+
 
 class VariableStatus(enum.Enum):
     EXISTS = enum.auto()
@@ -41,6 +42,12 @@ class NotCheckedError(Exception):
 class ElementDoesNotExist(Exception):
     """
     Raised when an non existant variable is requested by name
+    """
+
+
+class InvalidPlaceholder(Exception):
+    """
+    Raised when an invalid placeholder is used in a check
     """
 
 
@@ -136,7 +143,7 @@ class ProductChecker:
         if not self.checks:
             raise NotCheckedError('Checks have not been performed')
 
-        return [i.warning for i in self.checks if i.has_warning]
+        return [i.warning for i in self.checks if i.has_warning and i.warning]
 
     @property
     def errors(self) -> list[CheckError]:
@@ -158,7 +165,7 @@ class ProductChecker:
         if not self.checks:
             raise NotCheckedError('Checks have not been performed')
         
-        return [i.comment for i in self.checks if i.has_comment]
+        return [i.comment for i in self.checks if i.has_comment and i.comment]
 
 
     def _check(self, description:str, passed: bool=True, error: Optional[CheckError] = None) -> Check:
@@ -175,11 +182,11 @@ class ProductChecker:
         Returns:
             A new Check
         """
-        check = Check(description, passed, error)
+        check = Check(description=description, passed=passed, error=error)
         self.checks.append(check)
         return check
 
-    def get_type_from_placeholder(self, placeholder: str) -> str:
+    def get_type_from_placeholder(self, placeholder: str) -> tuple[str, str]:
         """
         Returns the type from a placeholder string. 
 
@@ -213,6 +220,8 @@ class ProductChecker:
 
         rex = re.compile(PLACEHOLDER_RE)
         matches = rex.search(placeholder)
+        if matches is None:
+            raise InvalidPlaceholder(f'Invalid placeholder: {placeholder}')
 
         additional = matches['additional']
         additional_rex = re.compile(
@@ -220,13 +229,13 @@ class ProductChecker:
             '?((regex=)(?P<regex>.+))?'
         )
         matches = additional_rex.search(additional)
+        if matches is None:
+            raise InvalidPlaceholder(f'Invalid placeholder: {placeholder}')
         
-        kwargs = {
-            'optional': matches['optional'] == 'optional',
-            'regex': matches['regex']
-        }
+        optional = matches['optional'] == 'optional'
+        regex =  matches['regex']
         
-        return AttributeProperties(**kwargs)
+        return AttributeProperties(optional=optional, regex=regex)
 
     def check_attribute_type(self, d: Any, f: Any, path: str='') -> None:
         """
@@ -239,6 +248,9 @@ class ProductChecker:
 
         Kwargs:
             path: full path of the attribute in the netCDF
+
+        Returns:
+            None
         """
 
         check = self._check(
@@ -275,6 +287,9 @@ class ProductChecker:
 
         Kwargs:
             path: full path of the attribute in the netCDF
+
+        Returns:
+            None
         """
 
         if isinstance(d, str) and 'derived_from_file' in d:
@@ -311,6 +326,9 @@ class ProductChecker:
 
         Kwargs:
             path: the pull path of the container
+
+        Returns:
+            None
         """
         if not path:
             path = '/'
@@ -377,7 +395,7 @@ class ProductChecker:
     def check_variable_exists(
         self, name: str, parent: Iterable, path: str='', from_file: bool=False,
         required: bool=True
-        ) -> bool:
+        ) -> VariableStatus:
         """
         Check a variable exists in a parent, which is assumed to be an iterable
         yielding a dict representation of the variable.
@@ -392,7 +410,7 @@ class ProductChecker:
             path: the full path of the variable in the netCDF
 
         Returns:
-            True if the variable exists, False otherwise
+            A VariableStatus enum value
         """
 
         in_type = 'in definition' if from_file else 'in file'
@@ -421,17 +439,31 @@ class ProductChecker:
 
         Kwargs:
             path: the full path to the variable in the netCDF
+
+        Returns:
+            None
         """
-
-        expected_type_str = d['meta']['datatype']
-        actual_type_str = f['meta']['datatype']
-
-        expected_dtype = type_from_spec(expected_type_str)
-        actual_dtype = type_from_spec(actual_type_str)
 
         check = self._check(
             description=f'Checking datatype of {path}'
         )
+        
+        expected_type_str = d['meta']['datatype']
+        actual_type_str = f['meta']['datatype']
+
+        actual_dtype = type_from_spec(actual_type_str)
+
+        # Check that the expected datatype is known to vocal
+        try:
+            expected_dtype = type_from_spec(expected_type_str)
+        except UnknownDataType:
+            check.passed = False
+            check.error = CheckError(
+                f'Unknown datatype in specification: {expected_type_str}',
+                path
+            )
+            return
+
 
         if actual_dtype != expected_dtype:
             check.passed = False
@@ -459,6 +491,9 @@ class ProductChecker:
 
         Kwargs:
             path: the full path to the container in the netcdf file
+
+        Returns:
+            None
         """
 
         for d_var in d:
@@ -498,6 +533,9 @@ class ProductChecker:
 
         Kwargs:
             path: The path to the group container
+
+        Returns:
+            None
         """
 
         for def_group in d:
@@ -522,7 +560,26 @@ class ProductChecker:
             
             self.compare_container(def_group, f_group, path=group_path)
 
-    def compare_dimensions(self, d: Iterable, f: Iterable, path: str='') -> None:
+    def compare_dimensions(self, d: dict, f: dict, path: str='') -> None:
+        """
+        Compare the dict representation of dimensions from a product
+        specification and from file.
+
+        We use the DimensionCollector to find the dimensions in the file. These
+        only collect the dimensions which are direct ancestors of variables,
+        as the author believes using dimensions which are not defined in
+        direct ancestors of variables is bad practice.
+
+        Args:
+            d: The dimension representation from the specification
+            f: The dimension representation from file
+
+        Kwargs:
+            path: The path to the dimension container
+
+        Returns:
+            None
+        """
         def_dims = DimensionCollector().search(d)
         file_dims = DimensionCollector().search(f)
 
