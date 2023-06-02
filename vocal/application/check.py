@@ -1,103 +1,23 @@
 """Check a netCDF file against standard and product definitions."""
 
-from argparse import Namespace
-from dataclasses import dataclass
-import importlib
 import os
 import sys
 
+from argparse import Namespace
+
+from pydantic import BaseModel
 from pydantic.error_wrappers import ValidationError
 
-from vocal.core import register_defaults_module
-from vocal.netcdf import NetCDFReader
-from vocal.checking import ProductChecker
-from vocal.utils import import_project
-from pydantic import BaseModel
 
 from . import parser_factory
-from ..utils import get_error_locs
+from ..checking import ProductChecker
+from ..core import register_defaults_module
+from ..netcdf import NetCDFReader
+from ..utils import get_error_locs, import_project, TextStyles, Printer
 
 LINE_LEN = 50
 
-
-@dataclass
-class Printer:
-    """
-    A class for printing messages to the terminal, with options for
-    suppressing certain types of messages.
-    """
-    quiet: bool = False
-    ignore_info: bool = False
-    ignore_warnings: bool = False
-    comments: bool = False
-
-    def print_line(self, len: int=50, token: str='-'):
-        """
-        Print a line of a given length, with a given token.
-
-        Args:
-            len (int): The length of the line.
-            token (str): The token to use.
-
-        Returns:
-            None
-        """
-        if self.quiet or self.ignore_info:
-            return
-        print(token * len)
-
-    def print_line_err(self, len: int=50, token: str='-'):
-        """
-        Print a line of a given length, with a given token.
-
-        Args:
-            len (int): The length of the line.
-            token (str): The token to use.
-
-        Returns:
-            None
-        """
-        if self.quiet:
-            return
-        print(token * len)
-
-    def print(self, *args, **kwargs):
-        """
-        Print a message.
-        """
-        if self.quiet or self.ignore_info:
-            return
-
-        print(*args, **kwargs)
-        
-    def print_err(self, *args, **kwargs):
-        """
-        Print a message in not quiet mode.
-        """
-        if self.quiet:
-            return
-
-        print(*args, **kwargs)
-
-    def print_comment(self, *args, **kwargs):
-        """
-        Print a comment if comments are on
-        """
-        if self.quiet or not self.comments:
-            return
-        
-        print(*args, **kwargs)
-
-    def print_warn(self, *args, **kwargs):
-        """
-        Print a message in not quiet or error mode.
-        """
-        if self.quiet or self.ignore_warnings:
-            return
-
-        print(*args, **kwargs)
-
-
+TS = TextStyles()
 p = Printer()
 
 
@@ -114,26 +34,30 @@ def check_against_standard(model: BaseModel, filename: str, project_name: str=''
         bool: True if all checks pass, False otherwise.
     """
 
-    p.print_line(LINE_LEN, '-')
-    p.print(f'Checking {filename} against {project_name} standard... ', end='')
+    p.print_err(
+        f'Checking {TS.BOLD}{filename}{TS.ENDC} against '
+        f'{TS.BOLD}{project_name}{TS.ENDC} standard... ',
+        end=''
+    )
+
     nc = NetCDFReader(filename)
     
     try:
         nc_noval = nc.to_model(model, validate=False) # type: ignore
         nc.to_model(model) # type: ignore
     except ValidationError as err:
-        p.print_err('ERROR')
+        p.print_err(f'{TS.FAIL}{TS.BOLD}ERROR!{TS.ENDC}\n')
 
         error_locs = get_error_locs(err, nc_noval)
 
         for err_loc, err_msg in zip(*error_locs):
-            p.print_err(f'{err_loc}: {err_msg}')
+            p.print_err(f'{TS.FAIL}{TS.BOLD}✗{TS.ENDC} {err_loc}: {err_msg}')
 
-        p.print_line(LINE_LEN, '-')
+        p.print_err()
         return False
     else:
-        p.print('OK!')
-        p.print_line(LINE_LEN, '-')
+        p.print_err(f'{TS.OKGREEN}{TS.BOLD}OK!{TS.ENDC}\n')
+
         return True
 
 
@@ -150,29 +74,55 @@ def check_against_specification(specification: str, filename: str) -> bool:
     """
     pc = ProductChecker(specification)
     pc.check(filename)
+
+    p.print_err(
+        f'Checking {TS.BOLD}{filename}{TS.ENDC} against '
+        f'{TS.BOLD}{os.path.basename(specification)}{TS.ENDC} specification... ',
+        end=''
+    )
+
+    failed = any(not check.passed for check in pc.checks)
+    if failed:
+        p.print_err(f'{TS.FAIL}{TS.BOLD}ERROR!{TS.ENDC}\n')
+    else:
+        p.print_err(f'{TS.OKGREEN}{TS.BOLD}OK!{TS.ENDC}\n')
     
     for check in pc.checks:
-        p.print(f'{check.description}... ', end='')
+        
         if check.passed:
             
-            if check.has_warning:
-                p.print_warn('WARNING', end='')
-                p.print_warn(f' --> {check.warning.path}: {check.warning.message}')
+            if check.has_warning and check.warning:
+                p.print_warn(f'  {check.description}', end='\r')
+                p.print_warn(f'{TS.BOLD}{TS.WARNING}!{TS.ENDC}')
+                p.print_warn(
+                    f'{TS.BOLD}{TS.WARNING}  --> {check.warning.path}: '
+                    f'{check.warning.message}{TS.ENDC}'
+                )
             else:
-                p.print('OK!')
-        else:
-            p.print_err('ERROR', end='')
-            p.print_err(f' --> {check.error.path}: {check.error.message}')
+                p.print(f'  {check.description}', end='\r')
+                p.print(f'{TS.BOLD}{TS.OKGREEN}✔{TS.ENDC}')
+        elif check.error:
+            p.print_err(f'  {check.description}', end='\r')
+            p.print_err(f'{TS.FAIL}{TS.BOLD}✗{TS.ENDC}')
+            p.print_err(
+                f'{TS.FAIL}  --> {TS.BOLD}{check.error.path}:{TS.ENDC} '
+                f'{TS.FAIL}{check.error.message}{TS.ENDC}'
+            )
+
+    for comment in pc.comments:
+        p.print_comment()
+        p.print_comment(
+            f'{TS.HEADER}{TS.BOLD}COMMENT:{TS.ENDC} {TS.HEADER}{comment.path}: '
+            f'{comment.message}{TS.ENDC}'
+        )
 
     p.print_err()
-    for comment in pc.comments:
-        p.print_comment(f'COMMENT: {comment.path}: {comment.message}')
-        p.print_comment()
     p.print_line_err(LINE_LEN, '=')
-    p.print_err(f'{len(pc.checks)} checks.')
-    p.print_err(f'{len(pc.warnings)} warnings.')
-    p.print_err(f'{len(pc.errors)} errors found.')
+    p.print_err(f'{TS.BOLD}{TS.OKGREEN}✔{TS.ENDC} {len(pc.checks)} checks.')
+    p.print_err(f'{TS.BOLD}{TS.WARNING}!{TS.ENDC} {len(pc.warnings)} warnings.')
+    p.print_err(f'{TS.BOLD}{TS.FAIL}✗{TS.ENDC} {len(pc.errors)} errors found.')
     p.print_line_err(LINE_LEN, '=')
+    p.print_err()
 
     return pc.passing
 
@@ -187,11 +137,16 @@ def check_file(args: Namespace) -> None:
     Exit:
         0 if all checks pass, 1 otherwise.
     """
+    p.print_err()
 
     all_ok1 = []
     for proj in args.project:
+        if proj.endswith('/'):
+            proj = proj[:-1]
+
         try:
-            project = import_project(proj) 
+            project = import_project(proj)
+
         except Exception:
             p.print_err(f'Could not import vocal project at "{proj}"')
             p.print_err('Please check that the project exists and is importable.')
@@ -260,6 +215,11 @@ def main() -> None:
         help='Print comments'
     )
 
+    parser.add_argument(
+        '--no-color', action='store_true',
+        help='Do not print colored output'
+    )
+
     args = parser.parse_args(sys.argv[2:])
     if args.error_only:
         p.ignore_info = True
@@ -270,5 +230,8 @@ def main() -> None:
         p.comments = True
 
     p.quiet = args.quiet
+
+    if args.no_color:
+        TS.enabled = False
 
     check_file(args)

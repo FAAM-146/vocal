@@ -233,3 +233,101 @@ def flip_to_dir(path: str) -> Generator[str, None, None]:
         raise
     finally:
         os.chdir(cwd)
+
+@dataclass
+class TextStyles:
+
+    _HEADER: str = '\033[95m'
+    _OKBLUE: str = '\033[94m'
+    _OKCYAN: str = '\033[96m'
+    _OKGREEN: str = '\033[92m'
+    _WARNING: str = '\033[93m'
+    _FAIL: str = '\033[91m'
+    _ENDC: str = '\033[0m'
+    _BOLD: str = '\033[1m'
+    _UNDERLINE: str = '\033[4m'
+
+    enabled: bool = True
+
+    def __getattr__(self, name: str) -> str:
+        if not self.enabled:
+            return ''
+
+        return getattr(self, f'_{name.upper()}')
+    
+@dataclass
+class Printer:
+    """
+    A class for printing messages to the terminal, with options for
+    suppressing certain types of messages.
+    """
+    quiet: bool = False
+    ignore_info: bool = False
+    ignore_warnings: bool = False
+    comments: bool = False
+
+    def print_line(self, len: int=50, token: str='-'):
+        """
+        Print a line of a given length, with a given token.
+
+        Args:
+            len (int): The length of the line.
+            token (str): The token to use.
+
+        Returns:
+            None
+        """
+        if self.quiet or self.ignore_info:
+            return
+        print(token * len)
+
+    def print_line_err(self, len: int=50, token: str='-'):
+        """
+        Print a line of a given length, with a given token.
+
+        Args:
+            len (int): The length of the line.
+            token (str): The token to use.
+
+        Returns:
+            None
+        """
+        if self.quiet:
+            return
+        print(token * len)
+
+    def print(self, *args, **kwargs):
+        """
+        Print a message.
+        """
+        if self.quiet or self.ignore_info:
+            return
+
+        print(*args, **kwargs)
+        
+    def print_err(self, *args, **kwargs):
+        """
+        Print a message in not quiet mode.
+        """
+        if self.quiet:
+            return
+
+        print(*args, **kwargs)
+
+    def print_comment(self, *args, **kwargs):
+        """
+        Print a comment if comments are on
+        """
+        if self.quiet or not self.comments:
+            return
+        
+        print(*args, **kwargs)
+
+    def print_warn(self, *args, **kwargs):
+        """
+        Print a message in not quiet or error mode.
+        """
+        if self.quiet or self.ignore_warnings:
+            return
+
+        print(*args, **kwargs)
