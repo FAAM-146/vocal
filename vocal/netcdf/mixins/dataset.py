@@ -28,18 +28,18 @@ class DatasetNetCDFMixin:
         
         with netCDF4.Dataset(nc_filename, 'w') as nc:
             for dim in self.dimensions:
-                dim.to_nc_container(nc)
+                dim.to_nc_container(nc) # type: ignore
 
             for var in self.variables:
-                var.to_nc_container(nc, coordinates)
+                var.to_nc_container(nc, coordinates) # type: ignore
 
             if self.groups is not None:
                 for group in self.groups:
-                    group.to_nc_container(nc)
+                    group.to_nc_container(nc) # type: ignore
 
             for attr, value in self.attributes:
                 try:
-                    value = global_data_hooks[attr](nc=nc, attrs=self.attributes)
+                    value = global_data_hooks[attr](nc=nc, attrs=self.attributes) # type: ignore
                 except KeyError:
                     pass
 
