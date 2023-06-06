@@ -8,16 +8,9 @@ from typing import Any, Iterator, Optional, Protocol, Tuple, Type
 import pydantic
 
 from pydantic.error_wrappers import ValidationError
-# from pydantic.main import create_model
 
 from .utils import FolderManager, dataset_from_partial_yaml
-# from .attributes import AttributesSet
 from .writers import VocabularyCreator
-# from .variable import Variable as _Variable
-# from .group import Group as _Group
-# from .dataset import Dataset as _Dataset
-# from .netcdf import NetCDFReader
-# from vocal import group
 from .utils import get_error_locs
 
 ATTRIBUTE_TYPES = ('group', 'variable', 'globals')
@@ -34,6 +27,7 @@ class HasAttributesMembers(Protocol):
     VariableAttributes: pydantic.BaseModel
     GroupAttributes: pydantic.BaseModel
 
+
 class HasRequiredAttributesMembers(Protocol):
     default_globals_attrs: dict[str, Any]
     default_group_attrs: dict[str, Any]
@@ -48,24 +42,51 @@ def register_defaults(name: str, mapping: dict) -> None:
         raise ValueError('Invalid name')
     _templates[name] = mapping
 
+
 def register_defaults_module(module: HasRequiredAttributesMembers) -> None:
     register_defaults('globals', getattr(module, 'default_global_attrs'))
     register_defaults('group', getattr(module, 'default_group_attrs'))
     register_defaults('variable', getattr(module, 'default_variable_attrs'))
 
+
 @dataclass
 class ProductDefinition:
+    """
+    Represents a product definition, which can be used to create a dataset.
+    """
 
     path: str
     model: Type[pydantic.BaseModel]
 
     def __call__(self) -> pydantic.BaseModel:
+        """
+        Return the dataset from the product definition.
+
+        Returns:
+            pydantic.BaseModel: The dataset, as a pydantic model.
+        """
         return self._from_yaml(construct=False)
 
     def construct(self) -> pydantic.BaseModel:
+        """
+        Construct the dataset from the product definition,
+        
+        Returns:
+            pydantic.BaseModel: The dataset, as a pydantic model.
+        """
         return self._from_yaml(construct=True)
 
     def _from_yaml(self, construct: bool=True) -> pydantic.BaseModel:
+        """
+        Create a dataset from the product definition.
+
+        Kwargs:
+            construct (bool, optional): If true, construct the dataset. If false,
+                return the dataset as a validated pydantic model. Defaults to True.
+
+        Returns:
+            pydantic.BaseModel: The dataset, as a pydantic model.
+        """
 
         return dataset_from_partial_yaml(
             self.path, variable_template=_templates['variable'],
@@ -76,15 +97,28 @@ class ProductDefinition:
         )
 
     def create_example_file(self, nc_filename: str, find_coords: bool=False) -> None:
+        """
+        Create an example netCDF file from the product definition.
 
+        Args:
+            nc_filename (str): The name of the netCDF file to create.
+            find_coords (bool, optional): Whether to find the coordinate variables
+                in the dataset. Defaults to False.
+        """
         
         coordinates = self.coordinates() if find_coords else None
 
-        self().create_example_file(
+        self().create_example_file( # type: ignore
             nc_filename, coordinates=coordinates
-        ) # type: ignore
+        ) 
 
     def coordinates(self) -> str:
+        """
+        Find the coordinate variables in the dataset.
+
+        Returns:
+            str: A string of the coordinate variables.
+        """
         dataset = self()
 
         _coords = {
@@ -94,28 +128,33 @@ class ProductDefinition:
             'time': None
         }
 
-        for var in dataset.variables:
+        for var in dataset.variables: # type: ignore
             for _crd in _coords.keys():
                 if var.attributes.standard_name == _crd:
                     _coords[_crd] = var.meta.name
 
         coord_arr = [v for _, v in _coords.items() if v]
         
-        coord_str = ' '.join(coord_arr)
+        coord_str = ' '.join(coord_arr) # type: ignore
         
         return coord_str
         
 
     def validate(self) -> None:
+        """
+        Validate the product definition, by trying to create it.
+        """
         errors = False
         try:
             self()
         except ValidationError as err:
+            # Create a dataset without validation, for error location
             nc_noval = self.construct()
 
             errors = True
             print(f'Error in dataset: {self.path}')
 
+            # Get the error locations, and print them
             error_locs = get_error_locs(err, nc_noval)
             for err_loc, err_msg in zip(*error_locs):
                 print(f'{err_loc}: {err_msg}')
@@ -126,6 +165,10 @@ class ProductDefinition:
 
 @dataclass
 class ProductCollection:
+    """
+    Represents a collection of product definitions, which can be used to create
+    versioned product definitions.
+    """
 
     model: Type[pydantic.BaseModel]
     version: str
