@@ -4,6 +4,9 @@ from typing import Union
 
 import numpy as np
 
+Numeric = Union[float, int]
+
+
 class UnknownDataType(Exception):
     """
     Raised when an unknown type is specified in a schema.
@@ -19,25 +22,23 @@ def derived_array(typ: str, optional: bool=False) -> str:
     opt_str = ' optional' if optional else ''
     return f'<Array[{typ}]: derived_from_file{opt_str}>'
 
-DerivedString = derived_type('str')
 
+DerivedString = derived_type('str')
 DerivedInteger8 = derived_type('int8')
-DeriverInteger16 = derived_type('int16')
+DerivedInteger16 = derived_type('int16')
 DerivedInteger32 = derived_type('int32')
 DerivedInteger64 = derived_type('int64')
 DerivedUInteger8 = derived_type('uint8')
 DeriverUInteger16 = derived_type('uint16')
 DerivedUInteger32 = derived_type('uint32')
 DerivedUInteger64 = derived_type('uint64')
-
-DerivedByte = derived_type('int8')
-
+DerivedByte = derived_type('byte')
+DerivedUByte = derived_type('ubyte')
 DerivedFloat16 = derived_type('float16')
 DerivedFloat32 = derived_type('float32')
 DerivedFloat64 = derived_type('float64')
 
 OptionalDerivedString = derived_type('str', optional=True)
-
 OptionalDerivedInteger8 = derived_type('int8', optional=True)
 OptionalDerivedInteger16 = derived_type('int16', optional=True)
 OptionalDerivedInteger32 = derived_type('int32', optional=True)
@@ -46,37 +47,43 @@ OptionalDerivedUInteger8 = derived_type('uint8', optional=True)
 OptionalDerivedUInteger16 = derived_type('uint16', optional=True)
 OptionalDerivedUInteger32 = derived_type('uint32', optional=True)
 OptionalDerivedUInteger64 = derived_type('uint64', optional=True)
-
-OptionalDerivedByte = derived_type('int8', optional=True)
-
+OptionalDerivedByte = derived_type('byte', optional=True)
+OptionalDerivedUByte = derived_type('ubyte', optional=True)
 OptionalDerivedFloat16 = derived_type('float64', optional=True)
 OptionalDerivedFloat32 = derived_type('float32', optional=True)
 OptionalDerivedFloat64 = derived_type('float64', optional=True)
 
 DerivedStringArray = derived_array('str')
-DerivedInteger32Array = derived_array('int8')
-DerivedInteger32Array = derived_array('int16')
+DerivedInteger8Array = derived_array('int8')
+DerivedInteger16Array = derived_array('int16')
 DerivedInteger32Array = derived_array('int32')
 DerivedInteger64Array = derived_array('int64')
 DerivedUInteger8Array = derived_array('uint8')
 DerivedUInteger16Array = derived_array('uint16')
 DerivedUInteger32Array = derived_array('uint32')
 DerivedUInteger64Array = derived_array('uint64')
-
-DerivedByteArray = derived_array('int8')
+DerivedByteArray = derived_array('byte')
+DerivedFloat16Array = derived_array('float16')
 DerivedFloat32Array = derived_array('float32')
 DerivedFloat64Array = derived_array('float64')
 
 OptionalDerivedStringArray = derived_array('str', optional=True)
+OptionalDerivedInteger8Array = derived_array('int8', optional=True)
+OptionalDerivedInteger16Array = derived_array('int16', optional=True)
 OptionalDerivedInteger32Array = derived_array('int32', optional=True)
 OptionalDerivedInteger64Array = derived_array('int64', optional=True)
-OptionalDerivedByteArray = derived_array('int8', optional=True)
+OptionalDerivedUInteger8Array = derived_array('uint8', optional=True)
+OptionalDerivedUInteger16Array = derived_array('uint16', optional=True)
+OptionalDerivedUInteger32Array = derived_array('uint32', optional=True)
+OptionalDerivedUInteger64Array = derived_array('uint64', optional=True)
+OptionalDerivedByteArray = derived_array('byte', optional=True)
+OptionalDerivedFloat16Array = derived_array('float16', optional=True)
 OptionalDerivedFloat32Array = derived_array('float32', optional=True)
 OptionalDerivedFloat64Array = derived_array('float64', optional=True)
 
-Numeric = Union[float, int]
 
-Byte = type_str('int8')
+Byte = type_str('byte')
+UByte = type_str('ubyte')
 Integer8 = type_str('int8')
 Integer16 = type_str('int16')
 Integer32 = type_str('int32')
@@ -115,6 +122,7 @@ np_invert = {
     np.uint16: UInteger16,
     np.uint8:  UInteger8,
     np.byte: Byte,
+    np.ubyte: UByte,
     list: list
 }
 
