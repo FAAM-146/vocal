@@ -100,13 +100,17 @@ class DimensionCollector:
     
     dimensions: list[dict] = field(default_factory=list)
 
-    def search(self, container: dict) -> list[dict]:
+    def search(self, container: dict, depth: int=99) -> list[dict]:
+
+        if depth == 0:
+            return self.dimensions
 
         for dim in container.get('dimensions', []):
             self.dimensions.append(dim)
 
-        for group in container.get('groups', []): 
-            self.search(group)
+        for group in container.get('groups', []):
+            self.search(group, depth=depth-1)
+        
 
         return self.dimensions
 
@@ -565,10 +569,8 @@ class ProductChecker:
         Compare the dict representation of dimensions from a product
         specification and from file.
 
-        We use the DimensionCollector to find the dimensions in the file. These
-        only collect the dimensions which are direct ancestors of variables,
-        as the author believes using dimensions which are not defined in
-        direct ancestors of variables is bad practice.
+        We use the DimensionCollector to find the dimensions in the file up
+        to the depth of the current path.
 
         Args:
             d: The dimension representation from the specification
@@ -580,8 +582,9 @@ class ProductChecker:
         Returns:
             None
         """
-        def_dims = DimensionCollector().search(d)
-        file_dims = DimensionCollector().search(f)
+        depth = path.count('/') + 1
+        def_dims = DimensionCollector().search(d, depth=depth)
+        file_dims = DimensionCollector().search(f, depth=depth)
 
         for dim in file_dims:
             _path = f'{path}/[{dim["name"]}]'
@@ -597,6 +600,20 @@ class ProductChecker:
                 path=_path
             )
 
+        for dim in def_dims:
+            _path = f'{path}/[{dim["name"]}]'
+            check = self._check(
+                description=f'Checking dimension {dim["name"]} is in file'
+            )
+            if dim in file_dims:
+                continue
+
+            check.has_warning = True
+            check.warning = CheckWarning(
+                message=f'Dimension {dim["name"]} unused',
+                path=_path
+            )
+
     def compare_container(self, d: dict, f: dict, path: str='') -> None:
         """
         Compare the dict representation of a netcdf container from a product
@@ -609,6 +626,8 @@ class ProductChecker:
         Kwargs:
             path: the path of the container in the netcdf file
         """
+
+        self.compare_dimensions(d, f, path=path)
 
         self.compare_attributes(d.get('attributes', {}), f.get('attributes', {}), path=path)
         self.compare_variables(d.get('variables', []), f.get('variables', []), path=path)
@@ -633,5 +652,4 @@ class ProductChecker:
         product_def = self.load_definition()
         netcdf_rep = NetCDFReader(target_file).dict
 
-        self.compare_dimensions(product_def, netcdf_rep)
         self.compare_container(product_def, netcdf_rep)
