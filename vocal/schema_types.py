@@ -32,8 +32,8 @@ DerivedUInteger8 = derived_type('uint8')
 DeriverUInteger16 = derived_type('uint16')
 DerivedUInteger32 = derived_type('uint32')
 DerivedUInteger64 = derived_type('uint64')
-DerivedByte = derived_type('byte')
-DerivedUByte = derived_type('ubyte')
+DerivedByte = derived_type('int8')
+DerivedUByte = derived_type('uint8')
 DerivedFloat16 = derived_type('float16')
 DerivedFloat32 = derived_type('float32')
 DerivedFloat64 = derived_type('float64')
@@ -47,8 +47,8 @@ OptionalDerivedUInteger8 = derived_type('uint8', optional=True)
 OptionalDerivedUInteger16 = derived_type('uint16', optional=True)
 OptionalDerivedUInteger32 = derived_type('uint32', optional=True)
 OptionalDerivedUInteger64 = derived_type('uint64', optional=True)
-OptionalDerivedByte = derived_type('byte', optional=True)
-OptionalDerivedUByte = derived_type('ubyte', optional=True)
+OptionalDerivedByte = derived_type('int8', optional=True)
+OptionalDerivedUByte = derived_type('uint8', optional=True)
 OptionalDerivedFloat16 = derived_type('float64', optional=True)
 OptionalDerivedFloat32 = derived_type('float32', optional=True)
 OptionalDerivedFloat64 = derived_type('float64', optional=True)
@@ -62,7 +62,7 @@ DerivedUInteger8Array = derived_array('uint8')
 DerivedUInteger16Array = derived_array('uint16')
 DerivedUInteger32Array = derived_array('uint32')
 DerivedUInteger64Array = derived_array('uint64')
-DerivedByteArray = derived_array('byte')
+DerivedByteArray = derived_array('int8')
 DerivedFloat16Array = derived_array('float16')
 DerivedFloat32Array = derived_array('float32')
 DerivedFloat64Array = derived_array('float64')
@@ -76,14 +76,14 @@ OptionalDerivedUInteger8Array = derived_array('uint8', optional=True)
 OptionalDerivedUInteger16Array = derived_array('uint16', optional=True)
 OptionalDerivedUInteger32Array = derived_array('uint32', optional=True)
 OptionalDerivedUInteger64Array = derived_array('uint64', optional=True)
-OptionalDerivedByteArray = derived_array('byte', optional=True)
+OptionalDerivedByteArray = derived_array('int8', optional=True)
 OptionalDerivedFloat16Array = derived_array('float16', optional=True)
 OptionalDerivedFloat32Array = derived_array('float32', optional=True)
 OptionalDerivedFloat64Array = derived_array('float64', optional=True)
 
 
-Byte = type_str('byte')
-UByte = type_str('ubyte')
+Byte = type_str('int8')
+UByte = type_str('uint8')
 Integer8 = type_str('int8')
 Integer16 = type_str('int16')
 Integer32 = type_str('int32')
@@ -113,6 +113,7 @@ np_invert = {
     str: String,
     float: Float32,
     np.float32: Float32,
+    np.float64: Float64,
     np.int64: Integer64,
     np.int32: Integer32,
     np.int16: Integer16,
@@ -121,8 +122,8 @@ np_invert = {
     np.uint32: UInteger32,
     np.uint16: UInteger16,
     np.uint8:  UInteger8,
-    np.byte: Byte,
-    np.ubyte: UByte,
+    np.int8: Byte,
+    np.uint8: UByte,
     list: list
 }
 
