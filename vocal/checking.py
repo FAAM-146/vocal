@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import enum
 from typing import Any, Iterable, Optional, Union
 from vocal.netcdf import NetCDFReader
-from vocal.schema_types import UnknownDataType, type_from_spec, np_invert
+from vocal.types import UnknownDataType, type_from_spec, np_invert
 
 import json
 import re
@@ -307,6 +307,9 @@ class ProductChecker:
                     self.check_attribute_value(_d, _f, path=f'{path}[{i}]')
                 return
             d = d[0]
+        
+        if d == f:
+            return
 
         check = self._check(
             description=f'Checking value of {path}'

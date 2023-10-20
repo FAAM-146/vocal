@@ -9,7 +9,7 @@ import numpy as np
 import pydantic
 from pydantic.main import BaseModel
 
-from ..schema_types import np_invert
+from ..types import np_invert
 # from .dataset import Dataset
 
 NCContainer = Union[netCDF4.Dataset, netCDF4.Group]

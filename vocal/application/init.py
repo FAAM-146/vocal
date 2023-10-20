@@ -36,7 +36,7 @@ from .dimension import Dimension
 """
 
 DEFAULTS = """
-from vocal.schema_types import *
+from vocal.types import *
 from .attributes.constants import *
 
 # Add your attribute default values here:
