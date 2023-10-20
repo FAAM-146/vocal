@@ -296,9 +296,11 @@ class ProductChecker:
             None
         """
 
+        # If the attribute is a placeholder, all we can do is check the type
         if isinstance(d, str) and 'derived_from_file' in d:
             return self.check_attribute_type(d, f, path=path)
 
+        # If the attribute is a list, we need to check each element
         if isinstance(d, list):
             if len(d) > 1:
                 for i, (_d, _f) in enumerate(zip(d, f)):
@@ -309,9 +311,6 @@ class ProductChecker:
         check = self._check(
             description=f'Checking value of {path}'
         )
-
-        if d == f:
-            return
 
         check.passed = False
         check.error = CheckError(
@@ -591,12 +590,27 @@ class ProductChecker:
             check = self._check(
                 description=f'Checking dimension {dim["name"]} is in definition'
             )
+
+            # The dimension is in the definition. Checking equality here, which
+            # encompasses both size and name.
             if dim in def_dims:
                 continue
 
+            # The dimension is not in the definition. Checking if there is a
+            # dimension with the same name, but different size.
+            dims_with_name = [d for d in def_dims if d['name'] == dim['name']]
+            if dims_with_name:
+                # There is a dimension with the same name, but different size.
+                message = (f'Dimension {dim["name"]} found in definition, but '
+                           f'with different size. Size in file: {dim["size"]}, '
+                           f'size in definition: {dims_with_name[0]["size"]}')
+            else:
+                # There is no dimension with the same name.
+                message = f'Dimension {dim["name"]} not found in definition'
+            
             check.passed = False
             check.error = CheckError(
-                message=f'Dimension {dim["name"]} not found in definition',
+                message=message,
                 path=_path
             )
 
@@ -608,11 +622,28 @@ class ProductChecker:
             if dim in file_dims:
                 continue
 
-            check.has_warning = True
-            check.warning = CheckWarning(
-                message=f'Dimension {dim["name"]} unused',
-                path=_path
-            )
+            # The dimension is not in the definition. Checking if there is a
+            # dimension with the same name, but different size.
+            dims_with_name = [d for d in file_dims if d['name'] == dim['name']]
+            if dims_with_name:
+                # There is a dimension with the same name, but different size.
+                message = (f'Dimension {dim["name"]} found in file, but '
+                           f'with different size. Size in definition: {dim["size"]}, '
+                           f'size in file: {dims_with_name[0]["size"]}')
+                check.passed = False
+                check.error = CheckError(
+                    message=message,
+                    path=_path
+                )
+            else:
+                # There is no dimension with the same name.
+                message = f'Dimension {dim["name"]} not found in file'
+
+                check.has_warning = True
+                check.warning = CheckWarning(
+                    message=message,
+                    path=_path
+                )
 
     def compare_container(self, d: dict, f: dict, path: str='') -> None:
         """
