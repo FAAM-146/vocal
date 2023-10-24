@@ -23,7 +23,7 @@ class HasDatasetAttributes(Protocol):
 class DatasetNetCDFMixin:
 
     def create_example_file(
-        self: HasDatasetAttributes, nc_filename: str, coordinates: Optional[str]
+        self: HasDatasetAttributes, nc_filename: str, coordinates: Optional[str]=None
     ) -> None:
         
         with netCDF4.Dataset(nc_filename, 'w') as nc:

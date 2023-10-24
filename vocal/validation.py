@@ -3,7 +3,7 @@ import random
 
 from string import ascii_lowercase, ascii_uppercase
 from typing import Any, Callable, Collection
-from pydantic import validator, root_validator
+from pydantic import model_validator, field_validator
 
 def _randomize_object_name(obj: Any) -> Any:
     """
@@ -142,9 +142,9 @@ def dimension_exists_factory(dimension_name: str) -> Callable:
 
 
 # Shortcut defining a validator with allow_reuse set as True
-re_validator = functools.partial(validator, allow_reuse=True)
-re_root_validator = functools.partial(root_validator, allow_reuse=True)
-substitutor = functools.partial(root_validator, allow_reuse=True, pre=True)
+re_validator = functools.partial(field_validator)
+re_root_validator = functools.partial(model_validator)
+substitutor = functools.partial(model_validator, mode='before')
 
 def substitute_placeholders(cls, values: dict) -> dict:
     """
@@ -161,7 +161,7 @@ def substitute_placeholders(cls, values: dict) -> dict:
             continue
 
         try:
-            example = cls.schema()['properties'][key]['example']
+            example = cls.model_json_schema()['properties'][key]['example']
         except KeyError:
             continue
 

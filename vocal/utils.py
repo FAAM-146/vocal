@@ -133,12 +133,12 @@ def dataset_from_partial_yaml(
         defn['attributes'] = _temp
 
         return defn
-        
+
     with open(yamlfile, 'r') as f:
         y = yaml.load(f, Loader=yaml.Loader)
 
         if construct:
-            return model.construct(**parse_definition(y))
+            return model.model_construct(**parse_definition(y))
         
         return model(**parse_definition(y))
     

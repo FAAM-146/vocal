@@ -50,9 +50,10 @@ DATASET_CODE = """
 from typing import Optional
 import netCDF4 # type: ignore
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
 
 from vocal.netcdf.mixins import DatasetNetCDFMixin
+from vocal.field import Field
 
 from ..attributes import GlobalAttributes
 
@@ -69,8 +70,9 @@ class DatasetMeta(BaseModel):
 
 
 class Dataset(BaseModel, DatasetNetCDFMixin):
-    class Config:
-        title = 'Dataset Schema'
+    model_config = ConfigDict(
+        title='Dataset Schema'
+    )
 
     meta: DatasetMeta
     attributes: GlobalAttributes
@@ -83,8 +85,9 @@ GROUP_CODE = """
 from __future__ import annotations
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from vocal.netcdf.mixins import GroupNetCDFMixin
+from vocal.field import Field
 
 from ..attributes import GroupAttributes
 
@@ -92,14 +95,16 @@ from .dimension import Dimension
 from .variable import Variable
 
 class GroupMeta(BaseModel):
-    class Config:
-        title = 'Group Metadata'
+    model_config = ConfigDict(
+        title='Group Metadata'
+    )
 
     name: str
 
 class Group(BaseModel, GroupNetCDFMixin):
-    class Config:
-        title = 'Group Schema'
+    model_config = ConfigDict(
+        title='Group Schema'
+    )
 
     meta: GroupMeta
     attributes: GroupAttributes
@@ -114,10 +119,11 @@ VARIABLE_CODE = """
 import netCDF4 # type: ignore
 import numpy as np
 import numpy.typing
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List
 
 from vocal.netcdf.mixins import VariableNetCDFMixin
+from vocal.field import Field
 
 from ..attributes import VariableAttributes
 

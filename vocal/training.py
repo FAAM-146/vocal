@@ -14,7 +14,12 @@ TIME_END = 3601
 
 NT = TIME_END - TIME_START
 
-def geospatial(nc: netCDF4.Dataset, axis: str, extrema: str) -> Union[np.float32, None]:
+def geospatial(
+        nc: netCDF4.Dataset,
+        axis: str,
+        extrema: str,
+        **kwargs: Any
+    ) -> Union[np.float32, None]:
     """
     Defines a function generic which can be partially completed to provide 
     functions which search the netcdf container for coordinate variables and
@@ -58,7 +63,7 @@ geospatial_lat_min = partial(geospatial, axis='Y', extrema='min')
 geospatial_vertical_max = partial(geospatial, axis='Z', extrema='max')
 geospatial_vertical_min = partial(geospatial, axis='Z', extrema='min')
 
-def revision_number(_: netCDF4.Dataset, attrs: pydantic.BaseModel) -> np.int32:
+def revision_number(nc: netCDF4.Dataset, attrs: pydantic.BaseModel) -> np.int32:
     revision_number = getattr(attrs, 'revision_number', 0)
     return np.int32(revision_number)
 

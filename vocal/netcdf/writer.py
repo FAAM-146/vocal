@@ -2,7 +2,7 @@ import os
 import json
 
 from dataclasses import dataclass, field
-from typing import Any, Container, Union
+from typing import Any, Union
 
 import netCDF4 # type: ignore
 import numpy as np

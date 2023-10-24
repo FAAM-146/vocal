@@ -6,7 +6,7 @@ import sys
 from argparse import Namespace
 
 from pydantic import BaseModel
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 
 from . import parser_factory

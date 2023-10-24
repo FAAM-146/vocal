@@ -3,11 +3,10 @@ from __future__ import annotations
 import os
 
 from dataclasses import dataclass, field
-from tkinter import N
 from typing import Any, Iterator, Optional, Protocol, Tuple, Type
 import pydantic
 
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 from .utils import FolderManager, dataset_from_partial_yaml
 from .writers import VocabularyCreator
