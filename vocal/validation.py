@@ -20,7 +20,7 @@ def _randomize_object_name(obj: Any) -> Any:
     obj.__name__ = _random_str
     return obj
 
-def default_value_factory(default: Any) -> Callable:
+def default_value(default: Any) -> Callable:
     """
     Provides a validator which ensures an attribute takes a given default 
     value
@@ -31,7 +31,7 @@ def default_value_factory(default: Any) -> Callable:
         return value
     return _randomize_object_name(_validator)
 
-def is_in_factory(collection: Collection) -> Callable:
+def is_in(collection: Collection) -> Callable:
     """
     Provides a validator which ensures an attribute takes a value in a
     given collection
@@ -42,14 +42,17 @@ def is_in_factory(collection: Collection) -> Callable:
         return value
     return _randomize_object_name(_validator)
 
-def variable_exists_factory(variable_name: str) -> Callable:
+def variable_exists(variable_name: str) -> Callable:
     """
     Provides a validator which ensures a variable exists in a given
     group
     """
     def _validator(cls, values):
-        variables = values.get('variables', [])
-        name = values.get('meta').name
+        try:
+            variables = values.variables
+        except Exception:
+            variables = []
+        name = values.meta.name
         if variables is None:
             raise ValueError(f'Variable \'{variable_name}\' not found in {name}')
 
@@ -60,9 +63,9 @@ def variable_exists_factory(variable_name: str) -> Callable:
 
     return _randomize_object_name(_validator)
 
-def variable_has_types_factory(variable_name: str, allowed_types: list[str]) -> Callable:
+def variable_has_types(variable_name: str, allowed_types: list[str]) -> Callable:
     def _validator(cls, values):
-        variables = values.get('variables')
+        variables = values.variables
         if variables is None:
             return values
         for var in variables:
@@ -78,9 +81,9 @@ def variable_has_types_factory(variable_name: str, allowed_types: list[str]) -> 
         return values
     return _randomize_object_name(_validator)
 
-def variable_has_dimensions_factory(variable_name: str, dimensions: list[str]) -> Callable:
+def variable_has_dimensions(variable_name: str, dimensions: list[str]) -> Callable:
     def _validator(cls, values):
-        variables = values.get('variables')
+        variables = values.variables
         if variables is None:
             return values
         for var in variables:
@@ -104,14 +107,17 @@ def variable_has_dimensions_factory(variable_name: str, dimensions: list[str]) -
     return _randomize_object_name(_validator)
 
 
-def group_exists_factory(group_name: str) -> Callable:
+def group_exists(group_name: str) -> Callable:
     """
     Provides a validator which ensures a variable exists in a given
     group
     """
     def _validator(cls, values):
-        groups = values.get('groups', [])
-        name = values.get('meta').name
+        try:
+            groups = values.groups
+        except Exception:
+            groups = []
+        name = values.meta.name
         if groups is None:
             raise ValueError(f'Group \'{group_name}\' not found in {name}')
 
@@ -122,14 +128,14 @@ def group_exists_factory(group_name: str) -> Callable:
 
     return _randomize_object_name(_validator)
 
-def dimension_exists_factory(dimension_name: str) -> Callable:
+def dimension_exists(dimension_name: str) -> Callable:
     """
     Provides a validator which ensures a variable exists in a given
     group
     """
     def _validator(cls, values):
-        dimensions = values.get('dimensions', [])
-        name = values.get('meta').name
+        dimensions = values.dimensions
+        name = values.meta.name
         if dimensions is None:
             raise ValueError(f'Dimension \'{dimension_name}\' not found in {name}')
 
@@ -141,10 +147,9 @@ def dimension_exists_factory(dimension_name: str) -> Callable:
     return _randomize_object_name(_validator)
 
 
-# Shortcut defining a validator with allow_reuse set as True
-re_validator = functools.partial(field_validator)
-re_root_validator = functools.partial(model_validator)
-substitutor = functools.partial(model_validator, mode='before')
+# These were more customised for pydantic v1. They're mostly passthroughs now.
+substitutor = model_validator(mode='before')
+validator = model_validator(mode='after')
 
 def substitute_placeholders(cls, values: dict) -> dict:
     """
