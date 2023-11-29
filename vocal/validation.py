@@ -149,7 +149,8 @@ def dimension_exists(dimension_name: str) -> Callable:
 
 # These were more customised for pydantic v1. They're mostly passthroughs now.
 substitutor = model_validator(mode='before')
-validator = model_validator(mode='after')
+def validator(attr: str) -> Callable:
+    return field_validator(attr, mode='after')
 
 def substitute_placeholders(cls, values: dict) -> dict:
     """
