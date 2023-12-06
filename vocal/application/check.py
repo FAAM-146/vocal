@@ -174,7 +174,7 @@ def main() -> None:
     """
 
     parser = parser_factory(
-        name='check',
+        file=__file__,
         description='Check a file against standard and/or product definition'
     )
 

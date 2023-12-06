@@ -24,10 +24,10 @@ This should result in the `vocal` script being available in your `PATH`:
     
     Available commands are:
 
-    * check           - Check a netCDF file against standard and product definitions.
-    * create_version  - Create versioned JSON product specifications.
-    * eg_data         - Create an example data file from a definition.
     * init            - Initialise a vocal project.
+    * release         - Create versioned JSON product specifications.
+    * build           - Create an example data file from a definition.
+    * check           - Check a netCDF file against standard and product definitions.
 
     try "vocal <command> -h" for help
 
@@ -137,9 +137,9 @@ that the value may change between files. In this case, the `comment` attribute i
 
 The 'working' copy of a data product definition is typically stored in the `definitions` directory. However, it is possible that a data product definition may change over time. For example, a new version of a standard may be released, or a data product may be updated to include new variables. In this case, it is useful to be able to track the changes between versions of a data product definition.
 
-To create a versioned copy of a data product definition, use the `vocal create_version` command.
+To create a versioned copy of a data product definition, use the `vocal release` command.
 
-    $ vocal create_version -d <project_name> -v <version> -o <output_dir>
+    $ vocal release -d <project_name> -v <version> -o <output_dir>
 
 This will create a directory named `<output_dir>/<version>` containing the versioned data product definition, as well as a `latest` directory containing a copy of the latest versions. The versioned data product definition is a JSON file, and is intended to be used with the `check` command. Additionally a `dataset_schema.json` file is created, which is a JSON Schema representation of the pydantic model for the dataset, minus any validators.
 
@@ -179,8 +179,8 @@ Any errors will be printed to the console, indicating where in the file the erro
 
 ## Creating example data
 
-*Vocal* can be used to create example data files from *vocal* projects and data product definitions. To do this, use the `eg_data` command:
+*Vocal* can be used to create example data files from *vocal* projects and data product definitions. To do this, use the `build` command:
 
-    $ vocal eg_data -p <project_name> -d <definition> -o <output_file>
+    $ vocal build -p <project_name> -d <definition> -o <output_file>
 
 This will create a netCDF file with sinusoidal data for each variable in the data product definition. 

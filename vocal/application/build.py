@@ -1,6 +1,6 @@
 """Create an example data file from a definition."""
 
-import importlib
+import os
 from argparse import Namespace
 import sys
 
@@ -27,9 +27,8 @@ def make_example_data(args: Namespace) -> None:
     product.create_example_file(output, find_coords=args.find_coordinates)
 
 def main() -> None:
-
     parser = parser_factory(
-        name='eg_data',
+        file=__file__,
         description=__doc__
     )
 

@@ -28,7 +28,7 @@ def resolve_full_path(path: str) -> str:
     return path
 
 
-def create_version(args: Namespace) -> None:
+def release(args: Namespace) -> None:
     project = resolve_full_path(args.project)
     version = args.version
     output_dir = args.output_dir
@@ -81,8 +81,8 @@ def create_version(args: Namespace) -> None:
 
 def main() -> None:
     parser = parser_factory(
-        name='create_version',
-        description='Create versioned JSON product specifications.'
+        file=__file__,
+        description='Create a versioned JSON product release.'
     )
 
     parser.add_argument(
@@ -109,4 +109,4 @@ def main() -> None:
 
     args = parser.parse_args(sys.argv[2:])
 
-    create_version(args)
+    release(args)

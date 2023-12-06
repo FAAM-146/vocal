@@ -211,7 +211,7 @@ def init_project(args: Namespace) -> None:
 
 def main() -> None:
     parser = parser_factory(
-        name='init',
+        file=__file__,
         description='Initialise a vocal project'
     )
 
