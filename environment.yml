@@ -5,6 +5,7 @@ dependencies:
   - python=3.10.8
   - tzdata=2023c
   - udunits2=2.2.25
+  - libnetcdf=4.8.1
   - pip=23.0.1
   - pip:
     - pip==23.0.1
