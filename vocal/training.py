@@ -2,7 +2,7 @@ import warnings
 
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Union
+from typing import Any, Callable, Union
 import netCDF4 # type: ignore
 
 import numpy as np
@@ -75,7 +75,10 @@ def actual_range(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> Union[list
         pass
 
     if getattr(attrs, 'flag_meanings', True) is None:
-        return [np.min(var), np.max(var)]
+        try:
+            return [np.min(var), np.max(var)]
+        except (TypeError, ValueError):
+            return [var.dtype.type(0), var.dtype.type(0)]
     return None
 
 def units(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> str:
@@ -109,7 +112,7 @@ variable_data_hooks = {
 }
 
 # Hooks for completing global attributes in test datasets
-global_data_hooks = {
+global_data_hooks: dict[str, Callable] = {
     'geospatial_lon_max': geospatial_lon_max,
     'geospatial_lon_min': geospatial_lon_min,
     'geospatial_lat_max': geospatial_lat_max,
