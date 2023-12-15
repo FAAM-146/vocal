@@ -4,6 +4,7 @@ import pydantic
 
 class HasDatasetMeta(Protocol):
     file_pattern: str
+    short_name: str
 
 
 class HasGroupMeta(Protocol):

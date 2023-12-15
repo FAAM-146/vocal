@@ -58,7 +58,7 @@ class DatasetNetCDFMixin:
             str: The CDL representation of the dataset.
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            ncfile = os.path.join(tmpdir, 'temp.nc')
+            ncfile = os.path.join(tmpdir, filename or f'{self.meta.short_name}.nc')
             with netCDF4.Dataset(ncfile, 'w') as nc:
                 for dim in self.dimensions:
                     dim.to_nc_container(nc) 
