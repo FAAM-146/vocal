@@ -7,13 +7,23 @@ import os
 import re
 import sys
 
-from typing import Iterator, Type, Generator
+from typing import Iterator, Optional, Type, Generator
 from types import ModuleType
 from dataclasses import dataclass
 from contextlib import contextmanager
+import netCDF4
 
 import pydantic
 import yaml
+
+@dataclass
+class Conventions:
+    name: str
+    major_version: Optional[int] = None
+    minor_version: Optional[int] = None
+
+    def __str__(self) -> str:
+        return f'{self.name}-{self.major_version}.{self.minor_version}'
 
 
 @dataclass
@@ -144,6 +154,15 @@ def dataset_from_partial_yaml(
     
 
 def import_project(project: str) -> ModuleType:
+    """
+    Import a vocal project from a given path.
+
+    Args:
+        project: the path to the project
+
+    Returns:
+        the imported module
+    """
 
     import_error_msg = f"Unable to import project {project}"
 
@@ -166,6 +185,64 @@ def import_project(project: str) -> ModuleType:
     spec.loader.exec_module(module)
 
     return module
+
+
+def import_versioned_project(project: str, version: Conventions) -> ModuleType:
+    """
+    Import a version of a vocal project from a given path. If multiple *major*
+    versions of the project exist, these are assumed to be in subdirectories
+    named v{major_version}.
+
+    Args:
+        project: the path to the project
+        version: the version of the project to import
+
+    Returns:
+        the imported module
+    """
+    project_path = os.path.join(project, f'v{version.major_version}')
+    return import_project(project_path)
+
+
+def extract_conventions_info(ncfile: str, conventions_regex: str) -> Conventions:
+    """
+    Extract conventions information from a netCDF file.
+
+    Args:
+        ncfile: the path to the netCDF file
+        conventions_regex: the regular expression to use to extract the
+            conventions information
+
+    Returns:
+        the extracted conventions information
+    """
+    with netCDF4.Dataset(ncfile, 'r') as nc:
+        conventions = nc.getncattr('Conventions')
+        matches = re.search(conventions_regex, conventions)
+        if not matches:
+            raise ValueError('Unable to extract conventions information')
+        
+        groups = matches.groupdict()
+
+        return Conventions(
+            name=groups['name'],
+            major_version=int(groups['major']),
+            minor_version=int(groups['minor']),
+        )
+
+
+def read_conventions_identifier(path: str) -> str:
+    conventions_id_file = os.path.join(path, 'conventions.yaml')
+    if not os.path.isfile(conventions_id_file):
+        return None
+    
+    with open(conventions_id_file, 'r') as f:
+        y = yaml.load(f, Loader=yaml.Loader)
+
+    name = y['conventions']['name']
+    regex = f'.*?(?P<name>{name})-(?P<major>[0-9]+)\.(?P<minor>[0-9]+),?\s?.*'
+    return regex
+    
 
 def get_error_locs(err: pydantic.ValidationError, unvalidated: pydantic.BaseModel) -> tuple[list[str], list[str]]:
     """

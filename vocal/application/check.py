@@ -13,7 +13,7 @@ from . import parser_factory
 from ..checking import ProductChecker
 from ..core import register_defaults_module
 from ..netcdf import NetCDFReader
-from ..utils import get_error_locs, import_project, TextStyles, Printer
+from ..utils import extract_conventions_info, get_error_locs, import_project, TextStyles, Printer, import_versioned_project, read_conventions_identifier
 
 LINE_LEN = 50
 
@@ -148,10 +148,18 @@ def check_file(args: Namespace) -> None:
             project = import_project(proj)
 
         except Exception:
-            p.print_err(f'Could not import vocal project at "{proj}"')
-            p.print_err('Please check that the project exists and is importable.')
-            raise
+            try:
+                regex = read_conventions_identifier(proj)
+                conventions_info = extract_conventions_info(args.filename, regex)
+                project = import_versioned_project(proj, conventions_info)
+                proj = str(conventions_info)
+            except Exception:
+                p.print_err(f'Could not import vocal project at "{proj}"')
+                p.print_err('Please check that the project exists and is importable.')
+                raise
+
         register_defaults_module(project.defaults)
+
         all_ok1.append(
             check_against_standard(
                 model=project.models.Dataset, filename=args.filename,
