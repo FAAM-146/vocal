@@ -177,7 +177,10 @@ class VariableTrainingData:
                 'Flag variable does not include flag_values or flag_masks'
             )
             
-        return (flags[0] * np.ones(self._get_data_size())).astype(np.int8)
+        try:
+            return (flags[0] * np.ones(self._get_data_size())).astype(np.int8)
+        except Exception:
+            return (0 * np.ones(self._get_data_size())).astype(np.int8)
 
     def _get_data_size(self) -> tuple:
         sizes = []
