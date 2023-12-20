@@ -261,7 +261,7 @@ def get_error_locs(err: pydantic.ValidationError, unvalidated: pydantic.BaseMode
     return_data: tuple[list[str], list[str]] = ([], [])
 
     for e in err.errors():
-        ncn = unvalidated.copy(deep=True)
+        ncn = unvalidated.model_copy(deep=True)
         
         locs = []
 
