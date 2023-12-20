@@ -232,9 +232,19 @@ def extract_conventions_info(ncfile: str, conventions_regex: str) -> Conventions
 
 
 def read_conventions_identifier(path: str) -> str:
+    """
+    Return the regular expression used to extract conventions information from
+    a netCDF file.
+
+    Args:
+        path: the path to the project
+
+    Returns:
+        the regular expression
+    """
     conventions_id_file = os.path.join(path, 'conventions.yaml')
     if not os.path.isfile(conventions_id_file):
-        return None
+        raise ValueError(f'Unable to find conventions identifier file at {conventions_id_file}')
     
     with open(conventions_id_file, 'r') as f:
         y = yaml.load(f, Loader=yaml.Loader)
