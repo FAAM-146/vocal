@@ -11,7 +11,7 @@ from typing import Iterator, Optional, Type, Generator
 from types import ModuleType
 from dataclasses import dataclass
 from contextlib import contextmanager
-import netCDF4
+import netCDF4 # type: ignore
 
 import pydantic
 import yaml
