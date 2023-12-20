@@ -11,11 +11,11 @@ from ...training import global_data_hooks
 from .protocols import HasDatasetAttributes
 
 
-class DatasetNetCDFMixin(HasDatasetAttributes):
+class DatasetNetCDFMixin:
 
     @contextmanager
     def _create_file(
-        self, nc_filename: str, coordinates: Optional[str]=None,
+        self: HasDatasetAttributes, nc_filename: str, coordinates: Optional[str]=None,
         populate: bool=True
     ) -> Generator[netCDF4.Dataset, None, None]:
         """
@@ -58,7 +58,7 @@ class DatasetNetCDFMixin(HasDatasetAttributes):
             yield nc
 
     def create_example_file(
-        self, nc_filename: str, coordinates: Optional[str]=None,
+        self: HasDatasetAttributes, nc_filename: str, coordinates: Optional[str]=None,
         populate: bool=True
     ) -> None:
         """
@@ -72,11 +72,11 @@ class DatasetNetCDFMixin(HasDatasetAttributes):
         Yields:
             Generator[netCDF4.Dataset, None, None]: The created netCDF file.
         """
-        with self._create_file(nc_filename, coordinates=coordinates, populate=populate) as nc:
+        with self._create_file(nc_filename, coordinates=coordinates, populate=populate) as nc: # type: ignore # mixin difficulty
             pass
 
     @contextmanager
-    def create_empty_file(self, nc_filename: str) -> Generator[netCDF4.Dataset, None, None]:
+    def create_empty_file(self: HasDatasetAttributes, nc_filename: str) -> Generator[netCDF4.Dataset, None, None]:
         """
         Context manager to create an empty netCDF file with the dataset's attributes, dimensions, variables, and groups.
 
@@ -86,10 +86,10 @@ class DatasetNetCDFMixin(HasDatasetAttributes):
         Yields:
             Generator[netCDF4.Dataset, None, None]: The created netCDF file.
         """
-        with self._create_file(nc_filename, populate=False) as nc:
+        with self._create_file(nc_filename, populate=False) as nc: # type: ignore # mixin difficulty
             yield nc
             
-    def to_cdl(self, filename: str | None=None) -> str:
+    def to_cdl(self: HasDatasetAttributes, filename: str | None=None) -> str:
         """
         Convert the dataset to CDL.
 
@@ -99,7 +99,7 @@ class DatasetNetCDFMixin(HasDatasetAttributes):
         with tempfile.TemporaryDirectory() as tmpdir:
             ncfile = os.path.join(tmpdir, f'{self.meta.short_name}.nc')
 
-            with self.create_empty_file(ncfile) as nc:
+            with self.create_empty_file(ncfile) as nc: # type: ignore # mixin difficulty
                 pass
 
             with netCDF4.Dataset(ncfile, 'r') as nc:
