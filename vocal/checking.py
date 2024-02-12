@@ -14,7 +14,7 @@ PLACEHOLDER_RE = ('<(?P<container>Array)?'
                   '(?P<additional>.*)>')
 
 
-class VariableStatus(enum.Enum):
+class ElementStatus(enum.Enum):
     EXISTS = enum.auto()
     DOES_NOT_EXIST_AND_REQUIRED = enum.auto()
     DOES_NOT_EXIST_AND_NOT_REQUIRED = enum.auto()
@@ -397,11 +397,48 @@ class ProductChecker:
                 return i
         
         raise ElementDoesNotExist(f'Element {name} not found')
+    
+    def check_group_exists(
+        self, name: str, parent: Iterable, path: str='', from_file: bool=False,
+        required: bool=True
+        ) -> bool:
+        """
+        Check a group exists in a parent, which is assumed to be an iterable
+        yielding a dict representation of the group.
+
+        Args:
+            name: the name of the group to check
+            container: an iterable yielding dict group representations
+            from_file: if True, checking group from file is in definition,
+                       if False, checking group from definition is in file.
+
+        Kwargs:
+            path: the full path of the group in the netCDF
+
+        Returns:
+            A GroupStatus enum value
+        """
+
+        in_type = 'in definition' if from_file else 'in file'
+
+        check = self._check(description=f'Checking group {path} exists {in_type}')
+
+        try:
+            self.get_element(name, parent)
+        except ElementDoesNotExist:
+            if not required:
+                return ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED
+            check.passed = False
+            check.error = CheckError(f'Group does not exist {in_type}', path)
+            return ElementStatus.DOES_NOT_EXIST_AND_REQUIRED
+        
+        return ElementStatus.EXISTS
+    
 
     def check_variable_exists(
         self, name: str, parent: Iterable, path: str='', from_file: bool=False,
         required: bool=True
-        ) -> VariableStatus:
+        ) -> ElementStatus:
         """
         Check a variable exists in a parent, which is assumed to be an iterable
         yielding a dict representation of the variable.
@@ -427,12 +464,12 @@ class ProductChecker:
             self.get_element(name, parent)
         except ElementDoesNotExist:
             if not required:
-               return VariableStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED
+               return ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED
             check.passed = False
             check.error = CheckError(f'Variable does not exist {in_type}', path)
-            return VariableStatus.DOES_NOT_EXIST_AND_REQUIRED
+            return ElementStatus.DOES_NOT_EXIST_AND_REQUIRED
 
-        return VariableStatus.EXISTS
+        return ElementStatus.EXISTS
 
     def check_variable_dtype(self, d: dict, f: dict, path: str='') -> None:
         """
@@ -512,8 +549,8 @@ class ProductChecker:
             )
             
             if variable_stat in (
-                    VariableStatus.DOES_NOT_EXIST_AND_REQUIRED,
-                    VariableStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED):
+                    ElementStatus.DOES_NOT_EXIST_AND_REQUIRED,
+                    ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED):
                 continue
 
             f_var = self.get_element(var_name, f)
@@ -543,27 +580,22 @@ class ProductChecker:
         Returns:
             None
         """
-
         for def_group in d:
             group_name = def_group["meta"]["name"]
             group_path = f'{path}/{group_name}'
+            group_required = def_group['meta'].get('required', True)
             
-            check = self._check(
-                description=f'Checking group {group_path} exists'
+            group_stat = self.check_group_exists(
+                group_name, f, path=path, required=group_required
             )
-
-            try:
-                f_group = self.get_element(group_name, f)
             
-            except ElementDoesNotExist:
-                check.passed = False
-                check.error = CheckError(
-                    message=f'group not found: {group_path}',
-                    path=group_path
-                )
-                
+            if group_stat in (
+                    ElementStatus.DOES_NOT_EXIST_AND_REQUIRED,
+                    ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED):
                 continue
             
+            # We know the group exists in the file, so we can get it and compare
+            f_group = self.get_element(group_name, f)
             self.compare_container(def_group, f_group, path=group_path)
 
     def compare_dimensions(self, d: dict, f: dict, path: str='') -> None:
