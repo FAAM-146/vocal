@@ -10,9 +10,10 @@ ATTRIBUTES_TEMPLATE = """
 from pydantic import Field, BaseModel
 
 class {attr_type}Attributes(BaseModel):
-    class Config:
+    model_config = ConfigDict(
         # Configuration options here
-        title = '{attr_type} Attributes'
+        title='{attr_type} Attributes'
+    )
 
     # Add your attributes here, e.g.
     #
