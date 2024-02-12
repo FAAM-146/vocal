@@ -100,6 +100,7 @@ class GroupMeta(BaseModel):
     )
 
     name: str
+    required: bool = True
 
 class Group(BaseModel, GroupNetCDFMixin):
     model_config = ConfigDict(
