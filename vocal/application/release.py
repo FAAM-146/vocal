@@ -42,6 +42,7 @@ def release(args: Namespace) -> None:
 
     try:
         module = import_project(project)
+        print(dir(module))
         defaults = module.defaults
         
     except ModuleNotFoundError as e:
