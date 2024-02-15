@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import glob
 import importlib
 import importlib.util
 import os
@@ -15,6 +16,79 @@ import netCDF4 # type: ignore
 
 import pydantic
 import yaml
+
+
+def _resolve_version(version: str, product_root: str) -> str:
+    """
+    Resolve the version of a dataset.
+
+    Args:
+        version: the version of the dataset
+        product_root: the root directory of the product
+
+    Returns:
+        the resolved version
+    """
+    if version == 'latest':
+        return os.path.join(product_root, 'products', 'latest')
+    else:
+        return os.path.join(product_root, f'v{version}')
+    
+
+def _get_product_root(project: ModuleType) -> str:
+    """
+    Get the root directory of the product.
+
+    Args:
+        project: the vocal project
+
+    Returns:
+        the root directory of the product
+    """
+    if project.__file__ is None:
+        raise ValueError('The vocal project must be a module')
+    
+    return os.path.sep.join(project.__file__.split(os.path.sep)[:-2])
+
+
+def get_dataset(short_name, project=None, version='latest', product_root=None):
+    if project is None:
+        raise ValueError('The vocal project must be specified')
+    
+    if product_root is None:
+        product_root = _get_product_root(project)
+
+    spec = get_spec(
+        short_name, project=project, version=version, product_root=product_root
+    )
+    return project.models.Dataset.model_validate(spec)
+
+
+def get_spec(short_name, project=None, version='latest', product_root=None) -> dict | None:
+    if project is None:
+        raise ValueError('The vocal project must be specified')
+    
+    if product_root is None:
+        product_root = _get_product_root(project)
+
+    products_dir = _resolve_version(version, product_root)
+
+    defs = [
+        i for i in glob.glob(os.path.join(products_dir, '*.json'))
+        if not i.endswith('dataset_schema.json')
+    ]
+
+    for d in defs:
+        with open(d, 'r') as y:
+            spec = yaml.load(y, Loader=yaml.Loader)
+            try:
+                if spec['meta']['short_name'] == short_name:
+                    return spec
+            except Exception:
+                continue
+
+    return None
+
 
 @dataclass
 class Conventions:
