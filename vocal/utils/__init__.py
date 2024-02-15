@@ -51,7 +51,7 @@ def _get_product_root(project: ModuleType) -> str:
     return os.path.sep.join(project.__file__.split(os.path.sep)[:-2])
 
 
-def get_dataset(short_name, project=None, version='latest', product_root=None):
+def get_product(short_name, project=None, version='latest', product_root=None):
     if project is None:
         raise ValueError('The vocal project must be specified')
     
