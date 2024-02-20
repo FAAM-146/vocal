@@ -401,7 +401,7 @@ class ProductChecker:
     def check_group_exists(
         self, name: str, parent: Iterable, path: str='', from_file: bool=False,
         required: bool=True
-        ) -> bool:
+        ) -> ElementStatus:
         """
         Check a group exists in a parent, which is assumed to be an iterable
         yielding a dict representation of the group.
