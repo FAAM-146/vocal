@@ -74,7 +74,7 @@ def actual_range(var: netCDF4.Variable, attrs: pydantic.BaseModel) -> Union[list
     except AttributeError:
         pass
 
-    if getattr(attrs, 'flag_meanings', True) is None:
+    if getattr(attrs, 'flag_meanings', None) is None:
         try:
             return [np.min(var), np.max(var)]
         except (TypeError, ValueError):
