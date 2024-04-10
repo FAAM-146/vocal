@@ -10,5 +10,4 @@ class HasDimensionAttributes(Protocol):
 class DimensionNetCDFMixin:
 
     def to_nc_container(self: HasDimensionAttributes, nc: netCDF4.Dataset) -> None:
-        print(f'Creating dimension {self.name}')
         nc.createDimension(self.name, self.size)

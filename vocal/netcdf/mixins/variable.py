@@ -36,7 +36,6 @@ class VariableNetCDFMixin:
         coordinates: Optional[str]=None,
         populate: Optional[bool]=True
     ) -> netCDF4.Variable:
-        print(f'creating variable {self.meta.name}')
 
         # Seems to be some inconsistent behaviour with the alias, try both
         # before failing
