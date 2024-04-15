@@ -1,17 +1,21 @@
-from dataclasses import dataclass, field
 import enum
-from typing import Any, Iterable, Optional, Union
-from vocal.netcdf import NetCDFReader
-from vocal.types import UnknownDataType, type_from_spec, np_invert
-
 import json
 import re
 
-PLACEHOLDER_RE = ('<(?P<container>Array)?'
-                  '\[?(?P<dtype>[a-z0-9]+)\]?'
-                  ': derived_from_file'
-                  '\s?'
-                  '(?P<additional>.*)>')
+from dataclasses import dataclass, field
+from typing import Any, Iterable, Optional, Union
+
+import numpy as np
+
+from vocal.netcdf import NetCDFReader
+from vocal.types import UnknownDataType, type_from_spec
+
+
+PLACEHOLDER_RE = (r'<(?P<container>Array)?'
+                  r'\[?(?P<dtype>[a-z0-9]+)\]?'
+                  r': derived_from_file'
+                  r'\s?'
+                  r'(?P<additional>.*)>')
 
 
 class ElementStatus(enum.Enum):
@@ -206,10 +210,11 @@ class ProductChecker:
         if not matches:
             raise ValueError('Unable to get type from placeholder')
 
-        dtype = f'<{matches["dtype"]}>'
+        dtype = f'{matches["dtype"]}'
         container = matches['container']
 
-        return dtype, container
+        import numpy as np
+        return np.dtype(dtype), container
 
     def get_attribute_props_from_placeholder(self, placeholder: str) -> AttributeProperties:
         """
@@ -262,17 +267,15 @@ class ProductChecker:
         )
 
         expected_type, container = self.get_type_from_placeholder(d)
-        actual_type = np_invert[type(f)]
+        actual_type = type(f)
 
         if expected_type == actual_type:
             return
 
         if container == 'Array' and actual_type is list:
-            if all([np_invert[type(i)] == expected_type for i in f]):
+            if all([type(i) == np.dtype(expected_type) for i in f]):
                 return
 
-        if actual_type is list:
-            actual_type = [np_invert[type(i)] for i in f]
         check.passed = False
         check.error = CheckError(
             message=f'Type of {path} incorrect. Expected {expected_type}, got {actual_type}',
@@ -295,6 +298,9 @@ class ProductChecker:
         Returns:
             None
         """
+        check = self._check(
+            description=f'Checking value of {path}'
+        )
 
         # If the attribute is a placeholder, all we can do is check the type
         if isinstance(d, str) and 'derived_from_file' in d:
@@ -302,7 +308,7 @@ class ProductChecker:
 
         # If the attribute is a list, we need to check each element
         if isinstance(d, list):
-            if len(d) > 1:
+            if len(d) > 1 and len(d) == len(f):
                 for i, (_d, _f) in enumerate(zip(d, f)):
                     self.check_attribute_value(_d, _f, path=f'{path}[{i}]')
                 return
@@ -311,9 +317,6 @@ class ProductChecker:
         if d == f:
             return
 
-        check = self._check(
-            description=f'Checking value of {path}'
-        )
 
         check.passed = False
         check.error = CheckError(
@@ -429,7 +432,7 @@ class ProductChecker:
             if not required:
                 return ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED
             check.passed = False
-            check.error = CheckError(f'Group does not exist {in_type}', path)
+            check.error = CheckError(f'Group {path} does not exist {in_type}', path)
             return ElementStatus.DOES_NOT_EXIST_AND_REQUIRED
         
         return ElementStatus.EXISTS
@@ -580,13 +583,15 @@ class ProductChecker:
         Returns:
             None
         """
+        
         for def_group in d:
+            
             group_name = def_group["meta"]["name"]
             group_path = f'{path}/{group_name}'
             group_required = def_group['meta'].get('required', True)
-            
+
             group_stat = self.check_group_exists(
-                group_name, f, path=path, required=group_required
+                group_name, f, path=group_path, required=group_required
             )
             
             if group_stat in (
@@ -594,9 +599,18 @@ class ProductChecker:
                     ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED):
                 continue
             
-            # We know the group exists in the file, so we can get it and compare
             f_group = self.get_element(group_name, f)
+
             self.compare_container(def_group, f_group, path=group_path)
+
+        for file_group in f:
+            group_name = file_group["meta"]["name"]
+            group_path = f'{path}/{group_name}'
+
+            self.check_group_exists(
+                group_name, d, path=group_path, from_file=True
+            )
+
 
     def compare_dimensions(self, d: dict, f: dict, path: str='') -> None:
         """
