@@ -9,8 +9,8 @@ __all__ = [
     'float16', 'float32', 'float64'
 ]
 
-int8 = Annotated[int, AfterValidator(np.int32)]
-int16 = Annotated[int, AfterValidator(np.int32)]
+int8 = Annotated[int, AfterValidator(np.int8)]
+int16 = Annotated[int, AfterValidator(np.int16)]
 int32 = Annotated[int, AfterValidator(np.int32)]
 int64 = Annotated[int, AfterValidator(np.int64)]
 
