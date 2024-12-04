@@ -61,20 +61,7 @@ def check_against_standard(model: BaseModel, filename: str, project_name: str=''
         return True
 
 
-def check_against_specification(specification: str, filename: str) -> bool:
-    """
-    Check a netCDF file against a product specification.
-
-    Args:
-        specification (str): The path of the specification to check against.
-        filename (str): The path of the netCDF file to check.
-
-    Returns:
-        bool: True if all checks pass, False otherwise.
-    """
-    pc = ProductChecker(specification)
-    pc.check(filename)
-
+def print_checks(pc, filename, specification):
     p.print_err(
         f'Checking {TS.BOLD}{filename}{TS.ENDC} against '
         f'{TS.BOLD}{os.path.basename(specification)}{TS.ENDC} specification... ',
@@ -86,11 +73,11 @@ def check_against_specification(specification: str, filename: str) -> bool:
         p.print_err(f'{TS.FAIL}{TS.BOLD}ERROR!{TS.ENDC}\n')
     else:
         p.print_err(f'{TS.OKGREEN}{TS.BOLD}OK!{TS.ENDC}\n')
-    
+
     for check in pc.checks:
-        
+
         if check.passed:
-            
+
             if check.has_warning and check.warning:
                 p.print_warn(f'  {check.description}', end='\r')
                 p.print_warn(f'{TS.BOLD}{TS.WARNING}!{TS.ENDC}')
@@ -124,6 +111,21 @@ def check_against_specification(specification: str, filename: str) -> bool:
     p.print_line_err(LINE_LEN, '=')
     p.print_err()
 
+
+def check_against_specification(specification: str, filename: str) -> bool:
+    """
+    Check a netCDF file against a product specification.
+
+    Args:
+        specification (str): The path of the specification to check against.
+        filename (str): The path of the netCDF file to check.
+
+    Returns:
+        bool: True if all checks pass, False otherwise.
+    """
+    pc = ProductChecker(specification)
+    pc.check(filename)
+    print_checks(pc, filename, specification)
     return pc.passing
 
 

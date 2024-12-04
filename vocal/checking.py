@@ -6,6 +6,7 @@ from vocal.types import UnknownDataType, type_from_spec, np_invert
 
 import json
 import re
+import numpy as np
 
 PLACEHOLDER_RE = ('<(?P<container>Array)?'
                   '\[?(?P<dtype>[a-z0-9]+)\]?'
@@ -301,15 +302,18 @@ class ProductChecker:
             return self.check_attribute_type(d, f, path=path)
 
         # If the attribute is a list, we need to check each element
-        if isinstance(d, list):
+        if isinstance(d, list) or isinstance(d, np.ndarray):
             if len(d) > 1:
                 for i, (_d, _f) in enumerate(zip(d, f)):
                     self.check_attribute_value(_d, _f, path=f'{path}[{i}]')
                 return
             d = d[0]
         
-        if d == f:
-            return
+        try:
+            if d == f:
+                return
+        except ValueError:
+            pass
 
         check = self._check(
             description=f'Checking value of {path}'
