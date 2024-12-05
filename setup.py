@@ -9,8 +9,11 @@ setup(
     url='https://github.com/FAAM-146/vocal',
     packages=[
         'vocal', 'vocal.application', 'vocal.types', 'vocal.netcdf',
-        'vocal.netcdf.mixins', 'vocal.utils'
+        'vocal.netcdf.mixins', 'vocal.utils', 'vocal.training'
     ],
+    package_data={
+        'vocal': ['py.typed'],
+    },
     scripts=['scripts/vocal'],
     install_requires=[
         'netCDF4>=1.6.2',
