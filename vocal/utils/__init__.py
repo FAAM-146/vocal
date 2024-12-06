@@ -173,8 +173,7 @@ def get_type_from_placeholder(placeholder: str) -> tuple[str, str]:
         Returns:
             An info type, for example <str>, <float32>
         """
-        # rex = re.compile("<([a-z0-9]+): derived_from_file>")
-        rex = re.compile('<(Array)?\[?([a-z0-9]+)\]?: derived_from_file\s?.*>')
+        rex = re.compile(r'<(Array)?\[?([a-z0-9]+)\]?: derived_from_file\s?.*>')
         matches = rex.search(placeholder)
         if not matches:
             raise ValueError('Unable to get type from placeholder')
