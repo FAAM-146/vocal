@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "faam-vocal"
+version = "0.1.0"
+description = "Compliance checking and metadata management"
+authors = ["Dave Sproson <dave.sproson@faam.ac.uk>"]
+license = "Open Government Licence v3.0"
+repository = "https://github.com/FAAM-146/vocal"
+readme = "README.md"
+packages = [
+    { include = "vocal" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+netcdf4 = "^1.7.2"
+cfunits = "^3.3.7"
+pydantic = "^2.10.3"
+pyyaml = "^6.0.2"
+
+[tool.poetry.scripts]
+vocal = 'vocal.cli.vocal:main'
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
