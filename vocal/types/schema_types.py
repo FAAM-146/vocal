@@ -129,7 +129,7 @@ np_invert = {
 
 def type_from_spec(spec: str) -> type:
     
-    rex = '<(?:Array)?\[?([a-z0-9]+)\]?:?.*?>'
+    rex = r'<(?:Array)?\[?([a-z0-9]+)\]?:?.*?>'
     try:
         _str_type = re.search(rex, spec)
         if _str_type is None:
