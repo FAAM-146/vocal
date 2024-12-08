@@ -1,4 +1,4 @@
-import netCDF4 # type: ignore
+import netCDF4  # type: ignore
 from typing import Protocol, Union
 
 

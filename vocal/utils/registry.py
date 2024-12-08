@@ -65,13 +65,13 @@ class Registry:
 
     def __iter__(self):
         return iter(self.projects)
-    
+
     def __getitem__(self, key: str) -> Project:
         return self.projects[key]
-    
+
     def __len__(self) -> int:
         return len(self.projects)
-    
+
     def first(self) -> Project:
         return next(iter(self.projects.values()))
 

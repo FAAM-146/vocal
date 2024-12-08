@@ -153,49 +153,58 @@ class Dimension(BaseModel, DimensionNetCDFMixin):
     size: Union[int, None]
 """
 
+
 def make_definitions_dir(folder: str) -> None:
-    def_dir = os.path.join(folder, 'definitions')
+    def_dir = os.path.join(folder, "definitions")
     os.mkdir(def_dir)
 
+
 def make_defaults_module(folder: str) -> None:
-    filename = os.path.join(folder, 'defaults.py')
-    with open(filename, 'w') as f:
+    filename = os.path.join(folder, "defaults.py")
+    with open(filename, "w") as f:
         f.write(DEFAULTS)
 
+
 def make_attributes_init(folder: str) -> None:
-    filename = os.path.join(folder, '__init__.py')
-    with open(filename, 'w') as f:
+    filename = os.path.join(folder, "__init__.py")
+    with open(filename, "w") as f:
         f.write(ATTRIBUTES_INIT)
 
+
 def make_attributes_file(folder: str, attr_type: str) -> None:
-    filename = os.path.join(folder, f'{attr_type.lower()}_attributes.py')
-    with open(filename, 'w') as f:
+    filename = os.path.join(folder, f"{attr_type.lower()}_attributes.py")
+    with open(filename, "w") as f:
         f.write(ATTRIBUTES_TEMPLATE.format(attr_type=attr_type))
 
+
 def make_attributes_module(parent_folder: str) -> None:
-    folder = os.path.join(parent_folder, 'attributes')
+    folder = os.path.join(parent_folder, "attributes")
     os.mkdir(folder)
-    for attr_type in ('Global', 'Group', 'Variable'):
+    for attr_type in ("Global", "Group", "Variable"):
         make_attributes_file(folder, attr_type)
     make_attributes_init(folder)
 
+
 def make_models_init(folder: str) -> None:
-    filename = os.path.join(folder, '__init__.py')
-    with open(filename, 'w') as f:
+    filename = os.path.join(folder, "__init__.py")
+    with open(filename, "w") as f:
         f.write(MODELS_INIT)
 
+
 def make_model_file(folder: str, model: str) -> None:
-    filename = os.path.join(folder, f'{model.lower()}.py')
-    text = globals()[f'{model}_CODE']
-    with open(filename, 'w') as f:
+    filename = os.path.join(folder, f"{model.lower()}.py")
+    text = globals()[f"{model}_CODE"]
+    with open(filename, "w") as f:
         f.write(text)
 
+
 def make_models_module(parent_folder: str) -> None:
-    folder = os.path.join(parent_folder, 'models')
+    folder = os.path.join(parent_folder, "models")
     os.mkdir(folder)
-    for model in ('DIMENSION', 'VARIABLE', 'GROUP', 'DATASET'):
+    for model in ("DIMENSION", "VARIABLE", "GROUP", "DATASET"):
         make_model_file(folder, model)
     make_models_init(folder)
+
 
 def init_project(args: Namespace) -> None:
     folder = args.directory[0]
@@ -203,7 +212,7 @@ def init_project(args: Namespace) -> None:
     try:
         os.mkdir(folder)
     except FileExistsError:
-        print(f'Initializing into existing folder: {folder}')
+        print(f"Initializing into existing folder: {folder}")
 
     make_attributes_module(folder)
     make_defaults_module(folder)
@@ -212,15 +221,16 @@ def init_project(args: Namespace) -> None:
 
 
 def main() -> None:
-    parser = parser_factory(
-        file=__file__,
-        description='Initialise a vocal project'
-    )
+    parser = parser_factory(file=__file__, description="Initialise a vocal project")
 
     parser.add_argument(
-        '-d', type=str, nargs=1, default='.',
-        metavar='DIRECTORY', dest='directory',
-        help='The directory in which to create the project. Defaults to cwd.'
+        "-d",
+        type=str,
+        nargs=1,
+        default=".",
+        metavar="DIRECTORY",
+        dest="directory",
+        help="The directory in which to create the project. Defaults to cwd.",
     )
 
     args = parser.parse_args(sys.argv[2:])

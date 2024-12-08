@@ -14,17 +14,16 @@ if TYPE_CHECKING:
 
 
 class SupportsInFolder(Protocol):
-    def in_folder(self) -> ContextManager[None]:
-        ...
+    def in_folder(self) -> ContextManager[None]: ...
 
 
-@dataclass # type: ignore # mypy issue with abstract dataclasses
+@dataclass  # type: ignore # mypy issue with abstract dataclasses
 class BaseWriter(ABC):
     """
     An abstract class, defining an interface for writing vocabs to file.
     """
-    
-    model: Any 
+
+    model: Any
     name: str
     folder_manager: SupportsInFolder
     indent: int = 2
@@ -41,10 +40,10 @@ class BaseWriter(ABC):
         """
         Write the model to file, as json, in a location given by folder_manager
         """
-        _filename = f'{self.name}.json'
+        _filename = f"{self.name}.json"
         with self.folder_manager.in_folder():
-            mode = 'w'
-            with open(f'{self.name}.json', mode) as f:
+            mode = "w"
+            with open(f"{self.name}.json", mode) as f:
                 f.write(self._json)
 
 
@@ -75,7 +74,7 @@ class SchemaWriter(BaseWriter):
 
 class ContainerWriter(BaseWriter):
     """
-    Implements a writer indended to write native containers to file. 
+    Implements a writer indended to write native containers to file.
     Assumes that these will be json serializable.
     """
 
@@ -93,7 +92,7 @@ class VocabularyCreator:
     folder_manager: Type[FolderManager]
     base_folder: str
     version: str
- 
+
     def write_datasets(self, folder_manager: SupportsInFolder) -> None:
         """
         Write defined datasets to file.
@@ -109,19 +108,17 @@ class VocabularyCreator:
         Write dataset, group, and variable schemata to file.
         """
         models = [self.product_collection.model]
-        names = ['dataset_schema']
+        names = ["dataset_schema"]
 
         for model, name in zip(models, names):
-            writer = SchemaWriter(
-                model=model, name=name, folder_manager=folder_manager
-            )
+            writer = SchemaWriter(model=model, name=name, folder_manager=folder_manager)
             writer.write()
 
     def create_vocabulary(self) -> None:
         """
         Create vocabularies.
         """
-        versions = (f'v{self.version}', 'latest')
+        versions = (f"v{self.version}", "latest")
 
         for version in versions:
             folder_manager = self.folder_manager(

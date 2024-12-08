@@ -4,9 +4,17 @@ from pydantic import AfterValidator
 import numpy as np
 
 __all__ = [
-    'int8', 'int16', 'int32', 'int64',
-    'uint8', 'uint16', 'uint32', 'uint64',
-    'float16', 'float32', 'float64'
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "float16",
+    "float32",
+    "float64",
 ]
 
 int8 = Annotated[int, AfterValidator(np.int8)]

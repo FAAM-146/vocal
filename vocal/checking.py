@@ -12,11 +12,13 @@ from vocal.netcdf import NetCDFReader
 from vocal.types import UnknownDataType, type_from_spec
 
 
-PLACEHOLDER_RE = (r'<(?P<container>Array)?'
-                  r'\[?(?P<dtype>[a-z0-9]+)\]?'
-                  r': derived_from_file'
-                  r'\s?'
-                  r'(?P<additional>.*)>')
+PLACEHOLDER_RE = (
+    r"<(?P<container>Array)?"
+    r"\[?(?P<dtype>[a-z0-9]+)\]?"
+    r": derived_from_file"
+    r"\s?"
+    r"(?P<additional>.*)>"
+)
 
 
 class ElementStatus(enum.Enum):
@@ -39,7 +41,7 @@ class CheckException(Exception):
 
 class NotCheckedError(Exception):
     """
-    An exception which may be raised when check properties are 
+    An exception which may be raised when check properties are
     accessed before checks have been carried out
     """
 
@@ -61,6 +63,7 @@ class CheckError:
     """
     Represents an error in a check
     """
+
     message: str
     path: str
 
@@ -73,6 +76,7 @@ class CheckWarning:
     """
     Represents a warning in a check
     """
+
     message: str
     path: str
 
@@ -82,6 +86,7 @@ class CheckComment:
     """
     Represents a comment in a check
     """
+
     message: str
     path: str
 
@@ -91,6 +96,7 @@ class Check:
     """
     Represents a single check
     """
+
     description: str
     passed: bool = True
     has_warning: bool = False
@@ -102,20 +108,19 @@ class Check:
 
 @dataclass
 class DimensionCollector:
-    
+
     dimensions: list[dict] = field(default_factory=list)
 
-    def search(self, container: dict, depth: int=99) -> list[dict]:
+    def search(self, container: dict, depth: int = 99) -> list[dict]:
 
         if depth == 0:
             return self.dimensions
 
-        for dim in container.get('dimensions', []):
+        for dim in container.get("dimensions", []):
             self.dimensions.append(dim)
 
-        for group in container.get('groups', []):
-            self.search(group, depth=depth-1)
-        
+        for group in container.get("groups", []):
+            self.search(group, depth=depth - 1)
 
         return self.dimensions
 
@@ -139,7 +144,7 @@ class ProductChecker:
         raises a NotCheckedError if no checks have been carried out
         """
         if not self.checks:
-            raise NotCheckedError('Checks have not been performed')
+            raise NotCheckedError("Checks have not been performed")
 
         return all([i.passed for i in self.checks])
 
@@ -150,7 +155,7 @@ class ProductChecker:
         raises a NotCheckedError if no checks have been carried out
         """
         if not self.checks:
-            raise NotCheckedError('Checks have not been performed')
+            raise NotCheckedError("Checks have not been performed")
 
         return [i.warning for i in self.checks if i.has_warning and i.warning]
 
@@ -161,10 +166,10 @@ class ProductChecker:
         if no checks have been carried out.
         """
         if not self.checks:
-            raise NotCheckedError('Checks have not been performed')
+            raise NotCheckedError("Checks have not been performed")
 
         return [i.error for i in self.checks if not i.passed]  # type: ignore
-    
+
     @property
     def comments(self) -> list[CheckComment]:
         """
@@ -172,12 +177,13 @@ class ProductChecker:
         raises a NotCheckedError if no checks have been carried out
         """
         if not self.checks:
-            raise NotCheckedError('Checks have not been performed')
-        
+            raise NotCheckedError("Checks have not been performed")
+
         return [i.comment for i in self.checks if i.has_comment and i.comment]
 
-
-    def _check(self, description:str, passed: bool=True, error: Optional[CheckError] = None) -> Check:
+    def _check(
+        self, description: str, passed: bool = True, error: Optional[CheckError] = None
+    ) -> Check:
         """
         Creates and returns a new Check.
 
@@ -197,7 +203,7 @@ class ProductChecker:
 
     def get_type_from_placeholder(self, placeholder: str) -> tuple[np.dtype[Any], str]:
         """
-        Returns the type from a placeholder string. 
+        Returns the type from a placeholder string.
 
         Args:
             placeholder: the placeholder string
@@ -205,18 +211,20 @@ class ProductChecker:
         Returns:
             An info type, for example <str>, <float32>
         """
-        
+
         rex = re.compile(PLACEHOLDER_RE)
         matches = rex.search(placeholder)
         if not matches:
-            raise ValueError('Unable to get type from placeholder')
+            raise ValueError("Unable to get type from placeholder")
 
         dtype = f'{matches["dtype"]}'
-        container = matches['container']
+        container = matches["container"]
 
         return np.dtype(dtype), container
 
-    def get_attribute_props_from_placeholder(self, placeholder: str) -> AttributeProperties:
+    def get_attribute_props_from_placeholder(
+        self, placeholder: str
+    ) -> AttributeProperties:
         """
         Returns additional attributes from a placeholder string.
 
@@ -230,23 +238,22 @@ class ProductChecker:
         rex = re.compile(PLACEHOLDER_RE)
         matches = rex.search(placeholder)
         if matches is None:
-            raise InvalidPlaceholder(f'Invalid placeholder: {placeholder}')
+            raise InvalidPlaceholder(f"Invalid placeholder: {placeholder}")
 
-        additional = matches['additional']
+        additional = matches["additional"]
         additional_rex = re.compile(
-            '(?P<optional>optional)?,'
-            '?((regex=)(?P<regex>.+))?'
+            "(?P<optional>optional)?," "?((regex=)(?P<regex>.+))?"
         )
         matches = additional_rex.search(additional)
         if matches is None:
-            raise InvalidPlaceholder(f'Invalid placeholder: {placeholder}')
-        
-        optional = matches['optional'] == 'optional'
-        regex =  matches['regex']
-        
+            raise InvalidPlaceholder(f"Invalid placeholder: {placeholder}")
+
+        optional = matches["optional"] == "optional"
+        regex = matches["regex"]
+
         return AttributeProperties(optional=optional, regex=regex)
 
-    def check_attribute_type(self, d: Any, f: Any, path: str='') -> None:
+    def check_attribute_type(self, d: Any, f: Any, path: str = "") -> None:
         """
         Checks the type of an attribute is correct, given a placeholder string
         in the product definition file.
@@ -262,9 +269,7 @@ class ProductChecker:
             None
         """
 
-        check = self._check(
-            description=f'Checking attribute {path} type is correct'
-        )
+        check = self._check(description=f"Checking attribute {path} type is correct")
 
         expected_type, container = self.get_type_from_placeholder(d)
         actual_type = type(f)
@@ -272,20 +277,19 @@ class ProductChecker:
         if expected_type == actual_type:
             return
 
-        if container == 'Array' and actual_type is list:
+        if container == "Array" and actual_type is list:
             if all([type(i) == np.dtype(expected_type) for i in f]):
                 return
 
         check.passed = False
         check.error = CheckError(
-            message=f'Type of {path} incorrect. Expected {expected_type}, got {actual_type}',
-            path=path
+            message=f"Type of {path} incorrect. Expected {expected_type}, got {actual_type}",
+            path=path,
         )
-        
 
-    def check_attribute_value(self, d: Any, f: Any, path: str='') -> None:
+    def check_attribute_value(self, d: Any, f: Any, path: str = "") -> None:
         """
-        Checks the value of an attribute, where it is specified in the 
+        Checks the value of an attribute, where it is specified in the
         product definition.
 
         Args:
@@ -298,38 +302,34 @@ class ProductChecker:
         Returns:
             None
         """
-        check = self._check(
-            description=f'Checking value of {path}'
-        )
+        check = self._check(description=f"Checking value of {path}")
 
         # If the attribute is a placeholder, all we can do is check the type
-        if isinstance(d, str) and 'derived_from_file' in d:
+        if isinstance(d, str) and "derived_from_file" in d:
             return self.check_attribute_type(d, f, path=path)
 
         # If the attribute is a list, we need to check each element
         if isinstance(d, list) or isinstance(d, np.ndarray):
             if len(d) > 1:
                 for i, (_d, _f) in enumerate(zip(d, f)):
-                    self.check_attribute_value(_d, _f, path=f'{path}[{i}]')
+                    self.check_attribute_value(_d, _f, path=f"{path}[{i}]")
                 return
             d = d[0]
-        
+
         try:
             if d == f:
                 return
         except ValueError:
             pass
 
-
         check.passed = False
         check.error = CheckError(
-            message=f'Unexpected value of {path}. Got [{f}], expected: [{d}]',
-            path=path
+            message=f"Unexpected value of {path}. Got [{f}], expected: [{d}]", path=path
         )
 
-    def compare_attributes(self, d: dict, f: dict, path: str='') -> None:
+    def compare_attributes(self, d: dict, f: dict, path: str = "") -> None:
         """
-        Compare the attributes in a netCDF container against the product 
+        Compare the attributes in a netCDF container against the product
         definition
 
         Args:
@@ -343,49 +343,48 @@ class ProductChecker:
             None
         """
         if not path:
-            path = '/'
+            path = "/"
 
         for def_key, def_value in d.items():
             check = self._check(
-                description=f'Checking attribute {path}.{def_key} exists'
+                description=f"Checking attribute {path}.{def_key} exists"
             )
 
             if def_key not in f:
-                if isinstance(def_value, str) and def_value.startswith('<'):
+                if isinstance(def_value, str) and def_value.startswith("<"):
                     attr_props = self.get_attribute_props_from_placeholder(def_value)
                     if attr_props.optional:
                         continue
                 else:
                     check.passed = False
                     check.error = CheckError(
-                        message=f'Attribute .{def_key} not in {path}',
-                        path=f'{path}.{def_key}'
+                        message=f"Attribute .{def_key} not in {path}",
+                        path=f"{path}.{def_key}",
                     )
 
                 check.passed = False
                 check.error = CheckError(
-                    message=f'Attribute .{def_key} not in {path}',
-                    path=f'{path}.{def_key}'
+                    message=f"Attribute .{def_key} not in {path}",
+                    path=f"{path}.{def_key}",
                 )
                 continue
-            
-            self.check_attribute_value(d[def_key], f[def_key], path=f'{path}.{def_key}')
+
+            self.check_attribute_value(d[def_key], f[def_key], path=f"{path}.{def_key}")
 
         for file_key in f:
             check = self._check(
-                description=f'Checking attribute {path}.{file_key} in definition'        
+                description=f"Checking attribute {path}.{file_key} in definition"
             )
             if file_key not in d:
                 check.has_warning = True
                 check.warning = CheckWarning(
-                    message=f'Found attribute .{file_key} which is not in definition',
-                    path=f'{path}.{file_key}'
+                    message=f"Found attribute .{file_key} which is not in definition",
+                    path=f"{path}.{file_key}",
                 )
-
 
     def get_element(self, name: str, container: Iterable) -> dict:
         """
-        Return an element from an iterable container, using the 
+        Return an element from an iterable container, using the
         name element of the container meta.
 
         Args:
@@ -399,15 +398,19 @@ class ProductChecker:
             ElementDoesNotExist if the variable is not found in the parent
         """
         for i in container:
-            if i['meta']['name'] == name:
+            if i["meta"]["name"] == name:
                 return i
-        
-        raise ElementDoesNotExist(f'Element {name} not found')
-    
+
+        raise ElementDoesNotExist(f"Element {name} not found")
+
     def check_group_exists(
-        self, name: str, parent: Iterable, path: str='', from_file: bool=False,
-        required: bool=True
-        ) -> ElementStatus:
+        self,
+        name: str,
+        parent: Iterable,
+        path: str = "",
+        from_file: bool = False,
+        required: bool = True,
+    ) -> ElementStatus:
         """
         Check a group exists in a parent, which is assumed to be an iterable
         yielding a dict representation of the group.
@@ -425,9 +428,9 @@ class ProductChecker:
             A GroupStatus enum value
         """
 
-        in_type = 'in definition' if from_file else 'in file'
+        in_type = "in definition" if from_file else "in file"
 
-        check = self._check(description=f'Checking group {path} exists {in_type}')
+        check = self._check(description=f"Checking group {path} exists {in_type}")
 
         try:
             self.get_element(name, parent)
@@ -435,16 +438,19 @@ class ProductChecker:
             if not required:
                 return ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED
             check.passed = False
-            check.error = CheckError(f'Group {path} does not exist {in_type}', path)
+            check.error = CheckError(f"Group {path} does not exist {in_type}", path)
             return ElementStatus.DOES_NOT_EXIST_AND_REQUIRED
-        
+
         return ElementStatus.EXISTS
-    
 
     def check_variable_exists(
-        self, name: str, parent: Iterable, path: str='', from_file: bool=False,
-        required: bool=True
-        ) -> ElementStatus:
+        self,
+        name: str,
+        parent: Iterable,
+        path: str = "",
+        from_file: bool = False,
+        required: bool = True,
+    ) -> ElementStatus:
         """
         Check a variable exists in a parent, which is assumed to be an iterable
         yielding a dict representation of the variable.
@@ -454,7 +460,7 @@ class ProductChecker:
             container: an iterable yielding dict variable representations
             from_file: if True, checking variable from file is in definition,
                        if False, checking variable from definition is in file.
-            
+
         Kwargs:
             path: the full path of the variable in the netCDF
 
@@ -462,22 +468,22 @@ class ProductChecker:
             A VariableStatus enum value
         """
 
-        in_type = 'in definition' if from_file else 'in file'
+        in_type = "in definition" if from_file else "in file"
 
-        check = self._check(description=f'Checking variable {path} exists {in_type}')
+        check = self._check(description=f"Checking variable {path} exists {in_type}")
 
         try:
             self.get_element(name, parent)
         except ElementDoesNotExist:
             if not required:
-               return ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED
+                return ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED
             check.passed = False
-            check.error = CheckError(f'Variable does not exist {in_type}', path)
+            check.error = CheckError(f"Variable does not exist {in_type}", path)
             return ElementStatus.DOES_NOT_EXIST_AND_REQUIRED
 
         return ElementStatus.EXISTS
 
-    def check_variable_dtype(self, d: dict, f: dict, path: str='') -> None:
+    def check_variable_dtype(self, d: dict, f: dict, path: str = "") -> None:
         """
         Check the datatype of a variable matches that given in the product
         definition
@@ -493,12 +499,10 @@ class ProductChecker:
             None
         """
 
-        check = self._check(
-            description=f'Checking datatype of {path}'
-        )
-        
-        expected_type_str = d['meta']['datatype']
-        actual_type_str = f['meta']['datatype']
+        check = self._check(description=f"Checking datatype of {path}")
+
+        expected_type_str = d["meta"]["datatype"]
+        actual_type_str = f["meta"]["datatype"]
 
         actual_dtype = type_from_spec(actual_type_str)
 
@@ -508,28 +512,28 @@ class ProductChecker:
         except UnknownDataType:
             check.passed = False
             check.error = CheckError(
-                f'Unknown datatype in specification: {expected_type_str}',
-                path
+                f"Unknown datatype in specification: {expected_type_str}", path
             )
             return
-
 
         if actual_dtype != expected_dtype:
             check.passed = False
             check.error = CheckError(
-                f'Incorrect datatype. Found {actual_dtype}, expected {expected_dtype}',
-                path
+                f"Incorrect datatype. Found {actual_dtype}, expected {expected_dtype}",
+                path,
             )
 
         if actual_type_str != expected_type_str:
             check.has_comment = True
             check.comment = CheckComment(
-                (f'Found datatype {actual_type_str}. Specification denotes expected '
-                 f'datatype as {expected_type_str}, but these are considered equivalent.'),
-                path
+                (
+                    f"Found datatype {actual_type_str}. Specification denotes expected "
+                    f"datatype as {expected_type_str}, but these are considered equivalent."
+                ),
+                path,
             )
 
-    def compare_variables(self, d: dict, f: dict, path: str='') -> None:
+    def compare_variables(self, d: dict, f: dict, path: str = "") -> None:
         """
         Compare all of the variables in a container to those in a product
         specification.
@@ -547,31 +551,36 @@ class ProductChecker:
 
         for d_var in d:
             var_name = d_var["meta"]["name"]
-            var_required = d_var['meta'].get('required', True)
-            var_path = f'{path}/{var_name}'
+            var_required = d_var["meta"].get("required", True)
+            var_path = f"{path}/{var_name}"
 
             variable_stat = self.check_variable_exists(
                 var_name, f, path=var_path, required=var_required
             )
-            
+
             if variable_stat in (
-                    ElementStatus.DOES_NOT_EXIST_AND_REQUIRED,
-                    ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED):
+                ElementStatus.DOES_NOT_EXIST_AND_REQUIRED,
+                ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED,
+            ):
                 continue
 
             f_var = self.get_element(var_name, f)
             self.check_variable_dtype(d_var, f_var, path=var_path)
 
-            self.compare_attributes(d_var['attributes'], f_var['attributes'], path=var_path)
+            self.compare_attributes(
+                d_var["attributes"], f_var["attributes"], path=var_path
+            )
 
         for f_var in f:
             var_name = f_var["meta"]["name"]
-            var_path = f'{path}/{var_name}'
+            var_path = f"{path}/{var_name}"
 
-            if not self.check_variable_exists(var_name, d, path=var_path, from_file=True):
+            if not self.check_variable_exists(
+                var_name, d, path=var_path, from_file=True
+            ):
                 continue
 
-    def compare_groups(self, d: Iterable, f: Iterable, path: str='') -> None:
+    def compare_groups(self, d: Iterable, f: Iterable, path: str = "") -> None:
         """
         Compare the dict representation of groups from a product specification
         and from file
@@ -586,36 +595,34 @@ class ProductChecker:
         Returns:
             None
         """
-        
+
         for def_group in d:
-            
+
             group_name = def_group["meta"]["name"]
-            group_path = f'{path}/{group_name}'
-            group_required = def_group['meta'].get('required', True)
+            group_path = f"{path}/{group_name}"
+            group_required = def_group["meta"].get("required", True)
 
             group_stat = self.check_group_exists(
                 group_name, f, path=group_path, required=group_required
             )
-            
+
             if group_stat in (
-                    ElementStatus.DOES_NOT_EXIST_AND_REQUIRED,
-                    ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED):
+                ElementStatus.DOES_NOT_EXIST_AND_REQUIRED,
+                ElementStatus.DOES_NOT_EXIST_AND_NOT_REQUIRED,
+            ):
                 continue
-            
+
             f_group = self.get_element(group_name, f)
 
             self.compare_container(def_group, f_group, path=group_path)
 
         for file_group in f:
             group_name = file_group["meta"]["name"]
-            group_path = f'{path}/{group_name}'
+            group_path = f"{path}/{group_name}"
 
-            self.check_group_exists(
-                group_name, d, path=group_path, from_file=True
-            )
+            self.check_group_exists(group_name, d, path=group_path, from_file=True)
 
-
-    def compare_dimensions(self, d: dict, f: dict, path: str='') -> None:
+    def compare_dimensions(self, d: dict, f: dict, path: str = "") -> None:
         """
         Compare the dict representation of dimensions from a product
         specification and from file.
@@ -633,7 +640,7 @@ class ProductChecker:
         Returns:
             None
         """
-        depth = path.count('/') + 1
+        depth = path.count("/") + 1
         def_dims = DimensionCollector().search(d, depth=depth)
         file_dims = DimensionCollector().search(f, depth=depth)
 
@@ -650,21 +657,20 @@ class ProductChecker:
 
             # The dimension is not in the definition. Checking if there is a
             # dimension with the same name, but different size.
-            dims_with_name = [d for d in def_dims if d['name'] == dim['name']]
+            dims_with_name = [d for d in def_dims if d["name"] == dim["name"]]
             if dims_with_name:
                 # There is a dimension with the same name, but different size.
-                message = (f'Dimension {dim["name"]} found in definition, but '
-                           f'with different size. Size in file: {dim["size"]}, '
-                           f'size in definition: {dims_with_name[0]["size"]}')
+                message = (
+                    f'Dimension {dim["name"]} found in definition, but '
+                    f'with different size. Size in file: {dim["size"]}, '
+                    f'size in definition: {dims_with_name[0]["size"]}'
+                )
             else:
                 # There is no dimension with the same name.
                 message = f'Dimension {dim["name"]} not found in definition'
-            
+
             check.passed = False
-            check.error = CheckError(
-                message=message,
-                path=_path
-            )
+            check.error = CheckError(message=message, path=_path)
 
         for dim in def_dims:
             _path = f'{path}/[{dim["name"]}]'
@@ -676,28 +682,24 @@ class ProductChecker:
 
             # The dimension is not in the definition. Checking if there is a
             # dimension with the same name, but different size.
-            dims_with_name = [d for d in file_dims if d['name'] == dim['name']]
+            dims_with_name = [d for d in file_dims if d["name"] == dim["name"]]
             if dims_with_name:
                 # There is a dimension with the same name, but different size.
-                message = (f'Dimension {dim["name"]} found in file, but '
-                           f'with different size. Size in definition: {dim["size"]}, '
-                           f'size in file: {dims_with_name[0]["size"]}')
-                check.passed = False
-                check.error = CheckError(
-                    message=message,
-                    path=_path
+                message = (
+                    f'Dimension {dim["name"]} found in file, but '
+                    f'with different size. Size in definition: {dim["size"]}, '
+                    f'size in file: {dims_with_name[0]["size"]}'
                 )
+                check.passed = False
+                check.error = CheckError(message=message, path=_path)
             else:
                 # There is no dimension with the same name.
                 message = f'Dimension {dim["name"]} not found in file'
 
                 check.has_warning = True
-                check.warning = CheckWarning(
-                    message=message,
-                    path=_path
-                )
+                check.warning = CheckWarning(message=message, path=_path)
 
-    def compare_container(self, d: dict, f: dict, path: str='') -> None:
+    def compare_container(self, d: dict, f: dict, path: str = "") -> None:
         """
         Compare the dict representation of a netcdf container from a product
         specification and from file
@@ -712,15 +714,19 @@ class ProductChecker:
 
         self.compare_dimensions(d, f, path=path)
 
-        self.compare_attributes(d.get('attributes', {}), f.get('attributes', {}), path=path)
-        self.compare_variables(d.get('variables', []), f.get('variables', []), path=path)
-        self.compare_groups(d.get('groups', []), f.get('groups', []), path=path)
+        self.compare_attributes(
+            d.get("attributes", {}), f.get("attributes", {}), path=path
+        )
+        self.compare_variables(
+            d.get("variables", []), f.get("variables", []), path=path
+        )
+        self.compare_groups(d.get("groups", []), f.get("groups", []), path=path)
 
     def load_definition(self) -> dict:
         """
         Load the product definition, and return it as a dict.
         """
-        with open(self.definition, 'r') as f:
+        with open(self.definition, "r") as f:
             product_def = json.load(f)
         return product_def
 
@@ -731,7 +737,7 @@ class ProductChecker:
         Args:
             target_file: the path of the file to check
         """
-        
+
         product_def = self.load_definition()
         netcdf_rep = NetCDFReader(target_file).dict
 

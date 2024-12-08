@@ -1,5 +1,8 @@
 from vocal.netcdf.mixins import (
-    DatasetNetCDFMixin, GroupNetCDFMixin, VariableNetCDFMixin, DimensionNetCDFMixin
+    DatasetNetCDFMixin,
+    GroupNetCDFMixin,
+    VariableNetCDFMixin,
+    DimensionNetCDFMixin,
 )
 from vocal.utils.mixins import DatasetUtilsMixin
 

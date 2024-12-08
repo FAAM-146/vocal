@@ -1,12 +1,15 @@
 from __future__ import annotations
 from typing import Optional
-from netCDF4 import Dataset # type: ignore
+from netCDF4 import Dataset  # type: ignore
 
 from .protocols import HasGroupAttributes
 
+
 class GroupNetCDFMixin:
 
-    def to_nc_container(self: HasGroupAttributes, nc: Dataset, populate: Optional[bool]=True) -> None:
+    def to_nc_container(
+        self: HasGroupAttributes, nc: Dataset, populate: Optional[bool] = True
+    ) -> None:
         this_group = nc.createGroup(self.meta.name)
 
         for dim in self.dimensions:
@@ -22,7 +25,7 @@ class GroupNetCDFMixin:
         for attr, value in self.attributes:
             if value is None:
                 continue
-            
+
             try:
                 setattr(this_group, attr, value)
             except TypeError:
