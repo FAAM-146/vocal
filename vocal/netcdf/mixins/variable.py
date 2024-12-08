@@ -1,57 +1,57 @@
-from typing import Any, Optional, Protocol
+from typing import Any, Optional
 import datetime
 
-import netCDF4 # type: ignore
+import netCDF4  # type: ignore
 import numpy as np
-import numpy.typing
-import pydantic
 
 from ...training import variable_data_hooks, VariableTrainingData
 
 from .protocols import HasVariableAttributes
 
-def np_type(var: HasVariableAttributes) -> numpy.typing.DTypeLike:
-    dtypes = {
-        '<int32>': np.int32,
-        '<int64>': np.int64,
-        '<int16>': np.int16,
-        '<int8>': np.int8,
-        '<uint32>': np.uint32,
-        '<uint64>': np.uint64,
-        '<uint16>': np.uint16,
-        '<uint8>': np.uint8,
-        '<byte>': np.byte,
-        '<float32>': np.float32,
-        '<float64>': np.float64
+npdt = (
+    type[np.signedinteger[Any]] | type[np.unsignedinteger[Any]] | type[np.floating[Any]]
+)
+
+
+def np_type(var: HasVariableAttributes) -> npdt:
+    dtypes: dict[str, npdt] = {
+        "<int32>": np.int32,
+        "<int64>": np.int64,
+        "<int16>": np.int16,
+        "<int8>": np.int8,
+        "<uint32>": np.uint32,
+        "<uint64>": np.uint64,
+        "<uint16>": np.uint16,
+        "<uint8>": np.uint8,
+        "<byte>": np.byte,
+        "<float32>": np.float32,
+        "<float64>": np.float64,
     }
 
     return dtypes[var.meta.datatype]
 
+
 class VariableNetCDFMixin:
 
-
     def to_nc_container(
-        self: HasVariableAttributes, 
+        self: HasVariableAttributes,
         nc: netCDF4.Dataset,
-        coordinates: Optional[str]=None,
-        populate: Optional[bool]=True
+        coordinates: Optional[str] = None,
+        populate: Optional[bool] = True,
     ) -> netCDF4.Variable:
 
         # Seems to be some inconsistent behaviour with the alias, try both
         # before failing
         try:
-            fv = self.attributes.FillValue # type: ignore
+            fv = self.attributes.FillValue  # type: ignore
         except AttributeError:
             try:
-                fv = self.attributes._FillValue # type: ignore
+                fv = self.attributes._FillValue  # type: ignore
             except AttributeError:
                 fv = None
 
         var = nc.createVariable(
-            self.meta.name,
-            np_type(self),
-            self.dimensions,
-            fill_value=fv 
+            self.meta.name, np_type(self), self.dimensions, fill_value=fv
         )
 
         if populate:
@@ -62,7 +62,10 @@ class VariableNetCDFMixin:
             # Deal with the case where non-local coordinates are given.
             # This is such a kludge.
             if coordinates is not None:
-                if attr == 'coordinates' and self.attributes.dict()['coordinates'] is not None:
+                if (
+                    attr == "coordinates"
+                    and self.attributes.dict()["coordinates"] is not None
+                ):
                     setattr(var, attr, coordinates)
                     continue
             try:
@@ -73,14 +76,14 @@ class VariableNetCDFMixin:
             if value is None:
                 continue
 
-            if attr in ('_FillValue', 'FillValue'):
+            if attr in ("_FillValue", "FillValue"):
                 continue
 
             if isinstance(value, datetime.date):
-                value = value.strftime('%Y-%m-%d')
+                value = value.strftime("%Y-%m-%d")
 
             if isinstance(value, datetime.datetime):
-                value = value.strftime('%Y-%m-%dT%H:%M:%SZ')
+                value = value.strftime("%Y-%m-%dT%H:%M:%SZ")
 
             setattr(var, attr, value)
 
