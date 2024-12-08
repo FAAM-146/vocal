@@ -46,7 +46,7 @@ class NetCDFReader:
         Returns a representation of a netCDF4 Variable
         """
 
-        vout = {}
+        vout: dict[str, Any] = {}
         vout['meta'] = {
             'name': var.name,
             'datatype': np_invert[var.dtype]
