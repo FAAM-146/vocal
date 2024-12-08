@@ -323,7 +323,7 @@ def read_conventions_identifier(path: str) -> str:
         y = yaml.load(f, Loader=yaml.Loader)
 
     name = y['conventions']['name']
-    regex = f'.*?(?P<name>{name})-(?P<major>[0-9]+)\.(?P<minor>[0-9]+),?\s?.*'
+    regex = rf'.*?(?P<name>{name})-(?P<major>[0-9]+)\.(?P<minor>[0-9]+),?\s?.*'
     return regex
     
 
