@@ -195,7 +195,7 @@ class ProductChecker:
         self.checks.append(check)
         return check
 
-    def get_type_from_placeholder(self, placeholder: str) -> tuple[str, str]:
+    def get_type_from_placeholder(self, placeholder: str) -> tuple[np.dtype[Any], str]:
         """
         Returns the type from a placeholder string. 
 
@@ -214,7 +214,6 @@ class ProductChecker:
         dtype = f'{matches["dtype"]}'
         container = matches['container']
 
-        import numpy as np
         return np.dtype(dtype), container
 
     def get_attribute_props_from_placeholder(self, placeholder: str) -> AttributeProperties:
