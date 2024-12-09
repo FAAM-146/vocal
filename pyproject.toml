@@ -16,6 +16,7 @@ netcdf4 = "^1.7.2"
 cfunits = "^3.3.7"
 pydantic = "^2.10.3"
 pyyaml = "^6.0.2"
+requests = "^2.32.3"
 
 [tool.poetry.scripts]
 vocal = 'vocal.cli.vocal:main'
