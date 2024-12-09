@@ -199,7 +199,10 @@ def load_matching_projects(filename: str) -> list[str]:
         )
         sys.exit(1)
 
-    c = Registry.filter(conventions)
+    try:
+        c = Registry.filter(conventions)
+    except FileNotFoundError:
+        c = Registry(projects={}) # This will cause an exit
 
     if len(c) == 0:
         p.print_err(
@@ -387,11 +390,13 @@ def main() -> None:
     if args.no_color:
         TS.enabled = False
 
+    autoloaded_projects = False
     if args.project is None:
         p.print_err()
         args.project = load_matching_projects(args.filename)
+        autoloaded_projects = True
 
-    if args.definition is None:
+    if args.definition is None and autoloaded_projects:
         args.definition = load_matching_definitions(args.filename)
 
     ok = run_checks(args.filename, args.project, args.definition)
