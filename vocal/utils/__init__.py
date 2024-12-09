@@ -8,11 +8,12 @@ import os
 import re
 import sys
 
-from typing import Iterator, Optional, Type, Generator
+from typing import Iterator, Type, Generator
 from types import ModuleType
 from dataclasses import dataclass
 from contextlib import contextmanager
-import netCDF4  # type: ignore
+
+from vocal.utils.conventions import Conventions
 
 import pydantic
 import yaml
@@ -51,7 +52,28 @@ def _get_product_root(project: ModuleType) -> str:
     return os.path.sep.join(project.__file__.split(os.path.sep)[:-2])
 
 
-def get_product(short_name, project=None, version="latest", product_root=None):
+def regexify_file_pattern(file_pattern: str, filecodec: dict) -> str:
+    """
+    Convert a file pattern to a regex pattern.
+
+    Args:
+        file_pattern: the file pattern
+        filecodec: the filecodec
+
+    Returns:
+        the regex pattern
+    """
+
+    return file_pattern.format(**{i: j["regex"] for i, j in filecodec.items()})
+
+
+def get_product(
+    short_name: str,
+    project: ModuleType | None = None,
+    version: str = "latest",
+    product_root=None,
+) -> dict | None:
+
     if project is None:
         raise ValueError("The vocal project must be specified")
 
@@ -65,8 +87,12 @@ def get_product(short_name, project=None, version="latest", product_root=None):
 
 
 def get_spec(
-    short_name, project=None, version="latest", product_root=None
+    short_name: str,
+    project: ModuleType | None = None,
+    version: str = "latest",
+    product_root: str | None = None,
 ) -> dict | None:
+
     if project is None:
         raise ValueError("The vocal project must be specified")
 
@@ -91,16 +117,6 @@ def get_spec(
                 continue
 
     return None
-
-
-@dataclass
-class Conventions:
-    name: str
-    major_version: Optional[int] = None
-    minor_version: Optional[int] = None
-
-    def __str__(self) -> str:
-        return f"{self.name}-{self.major_version}.{self.minor_version}"
 
 
 @dataclass
@@ -147,8 +163,8 @@ class FolderManager:
         """
         return os.path.join(self.base_folder, self.version)
 
-    @contextmanager  # type: ignore
-    def in_folder(self) -> Iterator[None]:
+    @contextmanager 
+    def in_folder(self) -> Generator[None, None, None]:
         """
         Returns a context manager, which temporarily changes the working
         directory, creating if if it doesn't exist.
@@ -278,58 +294,6 @@ def import_versioned_project(project: str, version: Conventions) -> ModuleType:
     """
     project_path = os.path.join(project, f"v{version.major_version}")
     return import_project(project_path)
-
-
-def extract_conventions_info(ncfile: str, conventions_regex: str) -> Conventions:
-    """
-    Extract conventions information from a netCDF file.
-
-    Args:
-        ncfile: the path to the netCDF file
-        conventions_regex: the regular expression to use to extract the
-            conventions information
-
-    Returns:
-        the extracted conventions information
-    """
-    with netCDF4.Dataset(ncfile, "r") as nc:
-        conventions = nc.getncattr("Conventions")
-        matches = re.search(conventions_regex, conventions)
-        if not matches:
-            raise ValueError("Unable to extract conventions information")
-
-        groups = matches.groupdict()
-
-        return Conventions(
-            name=groups["name"],
-            major_version=int(groups["major"]),
-            minor_version=int(groups["minor"]),
-        )
-
-
-def read_conventions_identifier(path: str) -> str:
-    """
-    Return the regular expression used to extract conventions information from
-    a netCDF file.
-
-    Args:
-        path: the path to the project
-
-    Returns:
-        the regular expression
-    """
-    conventions_id_file = os.path.join(path, "conventions.yaml")
-    if not os.path.isfile(conventions_id_file):
-        raise ValueError(
-            f"Unable to find conventions identifier file at {conventions_id_file}"
-        )
-
-    with open(conventions_id_file, "r") as f:
-        y = yaml.load(f, Loader=yaml.Loader)
-
-    name = y["conventions"]["name"]
-    regex = rf".*?(?P<name>{name})-(?P<major>[0-9]+)\.(?P<minor>[0-9]+),?\s?.*"
-    return regex
 
 
 def get_error_locs(
