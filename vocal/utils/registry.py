@@ -64,7 +64,7 @@ class Registry:
     projects: dict[str, Project]
 
     def __iter__(self):
-        return iter(self.projects)
+        return iter(self.projects.values())
 
     def __getitem__(self, key: str) -> Project:
         return self.projects[key]
@@ -73,14 +73,14 @@ class Registry:
         return len(self.projects)
 
     def first(self) -> Project:
-        return next(iter(self.projects.values()))
+        return next(iter(self))
 
     @classmethod
     def from_dict(cls, d: dict) -> "Registry":
         return cls(projects={k: Project.from_dict(v) for k, v in d.items()})
 
     @classmethod
-    def load(cls, path: str) -> "Registry":
+    def load(cls, path: str = get_default_registry_path()) -> "Registry":
         with open(path, "r") as f:
             try:
                 return cls.from_dict(yaml.load(f, Loader=yaml.Loader))
@@ -120,10 +120,10 @@ class Registry:
 
         conventions = conventions_string.split(" ")
         for project in registry:
-            spec = registry.projects[project].spec
+            spec = project.spec
             for conv in conventions:
                 if re.match(spec.regex, conv):
-                    projects[project] = registry.projects[project]
+                    projects[project.spec.name] = project
                     break
 
         return cls(projects=projects)
