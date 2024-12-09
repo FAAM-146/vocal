@@ -4,8 +4,6 @@ import os
 import re
 import sys
 
-from argparse import Namespace
-
 from vocal.application import parser_factory
 from vocal.utils.registry import (
     ProjectSpec,
@@ -19,15 +17,18 @@ class CannotRegisterProjectError(Exception):
     pass
 
 
-def register(args: Namespace) -> None:
+def register_project(
+    project_path: str,
+    definitions: str | None,
+    conventions_string: str,
+    force: bool = False,
+) -> None:
     """
     Register a vocal project globally.
 
     Args:
         args (Namespace): The parsed command line arguments.
     """
-    project_path = args.project
-    definitions = args.definitions
 
     print(f"Registering project {project_path} in userspace")
 
@@ -37,11 +38,11 @@ def register(args: Namespace) -> None:
 
     registry = load_registry()
 
-    spec = conventions_to_spec(args.conventions_string)
-    project = Project(spec=spec, path=project_path, definitions=args.definitions)
+    spec = conventions_to_spec(conventions_string)
+    project = Project(spec=spec, path=project_path, definitions=definitions)
 
     try:
-        registry.add_project(project, force=args.force)
+        registry.add_project(project, force=force)
     except ValueError:
         raise CannotRegisterProjectError(
             f"Project for '{spec.name}' is already registered. Use --force to override."
@@ -162,4 +163,4 @@ def main() -> None:
     )
 
     args = parser.parse_args(sys.argv[2:])
-    register(args)
+    register_project(args.project, args.definitions, args.conventions_string, args.force)
