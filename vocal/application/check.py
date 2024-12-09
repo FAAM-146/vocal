@@ -1,11 +1,13 @@
 """Check a netCDF file against standard and product definitions."""
 
 import os
+import re
 import sys
 
 from netCDF4 import Dataset
 from pydantic import BaseModel
 from pydantic import ValidationError
+import yaml
 
 from vocal.utils.registry import Registry
 
@@ -14,13 +16,17 @@ from ..checking import ProductChecker
 from ..core import register_defaults_module
 from ..netcdf import NetCDFReader
 from ..utils import (
-    extract_conventions_info,
     get_error_locs,
     import_project,
     TextStyles,
     Printer,
     import_versioned_project,
+    regexify_file_pattern,
+)
+from ..utils.conventions import (
+    get_conventions_string,
     read_conventions_identifier,
+    extract_conventions_info,
 )
 
 LINE_LEN = 50
@@ -185,8 +191,42 @@ def load_matching_projects(filename: str) -> list[str]:
     Returns:
         list[str]: The paths to the matching projects.
     """
-    with Dataset(filename) as nc:
-        conventions = getattr(nc, "Conventions", None)
+    conventions = get_conventions_string(filename)
+
+    if conventions is None:
+        p.print_err(
+            f"{TS.BOLD}{TS.FAIL}✗{TS.ENDC} No conventions found in file. Please provide a project or definition.\n"
+        )
+        sys.exit(1)
+
+    c = Registry.filter(conventions)
+
+    if len(c) == 0:
+        p.print_err(
+            f"{TS.BOLD}{TS.FAIL}✗{TS.ENDC} No registered project(s) found for conventions {conventions}\n"
+        )
+        sys.exit(1)
+
+    print(
+        f"\n{TS.BOLD}{TS.OKGREEN}✔{TS.ENDC} Found {len(c)} registered project(s) for conventions {conventions}: {', '.join(c.projects.keys())}"
+    )
+
+    return [p.path for p in c.projects.values()]
+
+
+def load_matching_definitions(filename: str) -> list[str]:
+    """
+    Given a filename, load all definitions that have registered projects
+    that match the conventions found in the file.
+
+    Args:
+        filename (str): The path to the netCDF file.
+
+    Returns:
+        list[str]: The paths to the matching definition files.
+    """
+
+    conventions = get_conventions_string(filename)
 
     if conventions is None:
         p.print_err(
@@ -194,13 +234,51 @@ def load_matching_projects(filename: str) -> list[str]:
         )
         sys.exit(1)
 
-    c = Registry.filter(conventions)
+    registry = Registry.filter(conventions)
 
-    print(
-        f"Found {len(c)} registered project(s) for conventions {conventions}: {', '.join(c.projects.keys())}"
-    )
+    definitions: list[str] = []
+    paths: list[str] = []
+    filecodecs: list[dict] = []
 
-    return [p.path for p in c.projects.values()]
+    # For each project, extract the conventions info and find all of the
+    # definitions that have the matching version. Also, store the filecodec
+    # for each project.
+    for project in registry:
+        ci = extract_conventions_info(
+            filename, project.spec.regex, name=project.spec.name
+        )
+        paths.append(os.path.join(project.definitions, ci.version_string))
+        vocal_project = import_project(project.path)
+        filecodecs.append(vocal_project.filecodec)
+
+    # Iterate over the definitions and filecodecs to find the matching
+    # definition for the file.
+    for path, codec in zip(paths, filecodecs):
+        def_files = [
+            f
+            for f in os.listdir(path)
+            if f.endswith(".json") and f != "dataset_schema.json"
+        ]
+        for file in def_files:
+            with open(os.path.join(path, file), "r") as f:
+                data = yaml.load(f, Loader=yaml.Loader)
+
+                # Get the filename from the file pattern, and convert it to a
+                # regex.
+                rex = regexify_file_pattern(data["meta"]["file_pattern"], codec)
+
+                # If the filename matches the regex, we want to use this 
+                # definition.
+                if re.match(rex, filename):
+                    p.print_err(f"{TS.BOLD}{TS.OKGREEN}✔{TS.ENDC} Found matching definition: {file}")
+                    definitions.append(os.path.join(path, file))
+
+    if len(definitions) == 0:
+        p.print_err(
+            f"{TS.BOLD}{TS.WARNING}!{TS.ENDC} No definitions match for file {filename}"
+        )
+
+    return definitions
 
 
 def run_checks(filename: str, projects: list[str], definitions: list[str]) -> bool:
@@ -309,8 +387,12 @@ def main() -> None:
     if args.no_color:
         TS.enabled = False
 
-    if args.project is None and args.definition is None:
+    if args.project is None:
+        p.print_err()
         args.project = load_matching_projects(args.filename)
+
+    if args.definition is None:
+        args.definition = load_matching_definitions(args.filename)
 
     ok = run_checks(args.filename, args.project, args.definition)
 
