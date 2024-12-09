@@ -163,7 +163,7 @@ class FolderManager:
         """
         return os.path.join(self.base_folder, self.version)
 
-    @contextmanager 
+    @contextmanager
     def in_folder(self) -> Generator[None, None, None]:
         """
         Returns a context manager, which temporarily changes the working
@@ -259,22 +259,25 @@ def import_project(project: str) -> ModuleType:
 
     import_error_msg = f"Unable to import project {project}"
 
-    module_path = os.path.join(project, "__init__.py")
-    if not module_path.startswith("/"):
-        module_path = os.path.join(os.getcwd(), module_path)
+    with flip_to_dir(os.path.dirname(project)):
+        module_path = os.path.join(os.path.basename(project), "__init__.py")
+        if not module_path.startswith("/"):
+            module_path = os.path.join(os.getcwd(), module_path)
 
-    spec = importlib.util.spec_from_file_location(f"{project}", module_path)
-    if spec is None:
-        raise ImportError(import_error_msg)
-    try:
-        if spec.loader is None:
+        spec = importlib.util.spec_from_file_location(
+            f"{os.path.basename(project)}", module_path
+        )
+        if spec is None:
             raise ImportError(import_error_msg)
-    except AttributeError:
-        raise ImportError(import_error_msg)
+        try:
+            if spec.loader is None:
+                raise ImportError(import_error_msg)
+        except AttributeError:
+            raise ImportError(import_error_msg)
 
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
 
     return module
 
