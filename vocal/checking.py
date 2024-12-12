@@ -308,19 +308,8 @@ class ProductChecker:
         if isinstance(d, str) and "derived_from_file" in d:
             return self.check_attribute_type(d, f, path=path)
 
-        # If the attribute is a list, we need to check each element
-        if isinstance(d, list) or isinstance(d, np.ndarray):
-            if len(d) > 1:
-                for i, (_d, _f) in enumerate(zip(d, f)):
-                    self.check_attribute_value(_d, _f, path=f"{path}[{i}]")
-                return
-            d = d[0]
-
-        try:
-            if d == f:
-                return
-        except ValueError:
-            pass
+        if np.array_equal(np.atleast_1d(f), np.atleast_1d(d)):
+            return
 
         check.passed = False
         check.error = CheckError(
