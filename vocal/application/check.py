@@ -101,6 +101,13 @@ def print_checks(pc, filename, specification):
                     f"{TS.BOLD}{TS.WARNING}  --> {check.warning.path}: "
                     f"{check.warning.message}{TS.ENDC}"
                 )
+            if check.has_comment and check.comment:
+                p.print_comment(f"  {check.description}", end="\r")
+                p.print_comment(f"{TS.BOLD}{TS.OKBLUE}i{TS.ENDC}")
+                p.print_comment(
+                    f"{TS.BOLD}{TS.OKBLUE}  --> {check.comment.path}: "
+                    f"{check.comment.message}{TS.ENDC}"
+                )
             else:
                 p.print(f"  {check.description}", end="\r")
                 p.print(f"{TS.BOLD}{TS.OKGREEN}✔{TS.ENDC}")
@@ -111,13 +118,6 @@ def print_checks(pc, filename, specification):
                 f"{TS.FAIL}  --> {TS.BOLD}{check.error.path}:{TS.ENDC} "
                 f"{TS.FAIL}{check.error.message}{TS.ENDC}"
             )
-
-    for comment in pc.comments:
-        p.print_comment()
-        p.print_comment(
-            f"{TS.HEADER}{TS.BOLD}COMMENT:{TS.ENDC} {TS.HEADER}{comment.path}: "
-            f"{comment.message}{TS.ENDC}"
-        )
 
     p.print_err()
     p.print_line_err(LINE_LEN, "=")
