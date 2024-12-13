@@ -308,13 +308,31 @@ class ProductChecker:
         if isinstance(d, str) and "derived_from_file" in d:
             return self.check_attribute_type(d, f, path=path)
 
-        if np.array_equal(np.atleast_1d(f), np.atleast_1d(d)):
+        f_array = np.atleast_1d(f)
+        d_array = np.atleast_1d(d)
+
+        if len(f_array) != len(d_array):
+            check.passed = False
+            check.error = CheckError(
+                message=f"Unexpected value of {path} incorrect. Got {f}, expected {d}",
+                path=path,
+            )
             return
 
-        check.passed = False
-        check.error = CheckError(
-            message=f"Unexpected value of {path}. Got [{f}], expected: [{d}]", path=path
-        )
+        for f_val, d_val in zip(f_array, d_array):
+            if f_val == d_val:
+                continue
+
+            if isinstance(d_val, str) and "derived_from_file" in d_val:
+                self.check_attribute_type(d_val, f_val, path=path)
+                continue
+
+            check.passed = False
+            check.error = CheckError(
+                message=f"Unexpected value of {path}. Got {f}, expected: {d}",
+                path=path,
+            )
+            return
 
     def compare_attributes(self, d: dict, f: dict, path: str = "") -> None:
         """
