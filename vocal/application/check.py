@@ -98,15 +98,15 @@ def print_checks(pc, filename, specification):
                 p.print_warn(f"  {check.description}", end="\r")
                 p.print_warn(f"{TS.BOLD}{TS.WARNING}!{TS.ENDC}")
                 p.print_warn(
-                    f"{TS.BOLD}{TS.WARNING}  --> {check.warning.path}: "
-                    f"{check.warning.message}{TS.ENDC}"
+                    f"{TS.BOLD}{TS.WARNING}  --> {check.warning.path}: {TS.ENDC}"
+                    f"{TS.WARNING}{check.warning.message}{TS.ENDC}"
                 )
             if check.has_comment and check.comment:
                 p.print_comment(f"  {check.description}", end="\r")
                 p.print_comment(f"{TS.BOLD}{TS.OKBLUE}i{TS.ENDC}")
                 p.print_comment(
-                    f"{TS.BOLD}{TS.OKBLUE}  --> {check.comment.path}: "
-                    f"{check.comment.message}{TS.ENDC}"
+                    f"{TS.BOLD}{TS.OKBLUE}  --> {check.comment.path}: {TS.ENDC}"
+                    f"{TS.OKBLUE}{check.comment.message}{TS.ENDC}"
                 )
             else:
                 p.print(f"  {check.description}", end="\r")
@@ -124,6 +124,7 @@ def print_checks(pc, filename, specification):
     p.print_err(f"{TS.BOLD}{TS.OKGREEN}✔{TS.ENDC} {len(pc.checks)} checks.")
     p.print_err(f"{TS.BOLD}{TS.WARNING}!{TS.ENDC} {len(pc.warnings)} warnings.")
     p.print_err(f"{TS.BOLD}{TS.FAIL}✗{TS.ENDC} {len(pc.errors)} errors found.")
+    p.print_err(f"{TS.BOLD}{TS.OKBLUE}i{TS.ENDC} {len(pc.comments)} comments (run with -c).")
     p.print_line_err(LINE_LEN, "=")
     p.print_err()
 
