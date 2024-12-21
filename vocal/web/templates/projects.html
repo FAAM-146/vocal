@@ -1,0 +1,13 @@
+{% extends "vocal.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Projects</h1>
+    {% for project_name, project in projects.items() %}
+        <h2>{{ project_name }}</h2>
+        <p>Project dir: <span class="code">{{ project.path }}</span></p>
+        <p>Products dir: <span class="code">{{ project.definitions }}</span></p>
+        <p>Identifier regex: <span class="code">{{project.spec.regex}}</span></p>
+        {% endfor %}
+    </div>  
+{% endblock %}

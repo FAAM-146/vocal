@@ -1,0 +1,15 @@
+{% extends "vocal.html" %}
+
+{% block content %}
+
+
+<div class="checker">
+    <form action="/" method="post" enctype="multipart/form-data">
+        <div class="flex-column">
+            <label class="mb-1 s-2" for="ncfile">Select a file:</label>
+            <input class="mb-1 s-1" type="file" id="ncfile" name="file" accept=".nc">
+            <input class="mb-1 s-2" type="submit">
+        </div>
+    </form>
+</div>
+{% endblock %}

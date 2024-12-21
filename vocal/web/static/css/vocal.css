@@ -1,0 +1,163 @@
+html {
+    background-color: #111;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #111;
+    color: #fff;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+    margin-top: 50px;
+}
+
+.check-panel {
+    position: relative;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    border: 2px solid #444;
+}
+
+.panel-error {
+    background-color: #d32f2f44;
+    color: #fff;
+    border: 2px solid #d32f2f;
+}
+
+.panel-success {
+    background-color: #388e3c44;
+    color: #fff;
+    border: 2px solid #388e3c;
+}
+
+.panel-warning {
+    background-color: #fbc02d44;
+    color: #fff;
+    border: 2px solid #fbc02d;
+}
+
+.panel-info {
+    background-color: #1976d244;
+    color: #fff;
+    border: 2px solid #1976d2;
+}
+
+a {
+    color: #fff;
+    text-decoration: underline;
+}
+a:hover {
+    color: #fff;
+}
+a.a-plain {
+    text-decoration: none;
+}
+a.a-plain:hover {
+    text-decoration: underline;
+}
+a.btn {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+a.btn:hover {
+    background-color: #444;
+}
+
+.flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checker {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inset: 50px 0 0 0;
+}
+
+.title-bar {
+    background-color: #111;
+    padding-left: 10px;
+    padding-right: 10px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+}
+
+.pr-1 {
+    padding-right: 10px;
+}
+
+.mr-1 {
+    margin-right: 10px;
+}
+
+.mb-1 {
+    margin-bottom: 10px;
+}
+
+.s-1 {
+    font-size: 1em;
+}
+
+.s-2 {
+    font-size: 1.5em;
+}
+
+input[type="file"] {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #444;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+input[type="text"], input[type="password"] {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #444;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+input[type="submit"] {
+    background-color: #333;
+    cursor: pointer;
+    color: #fff;
+    border: 1px solid #444;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.code {
+    background-color: #333;
+    color: #fff;
+    padding: 4px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    font-family: 'Roboto Mono', monospace;
+}

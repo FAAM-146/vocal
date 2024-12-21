@@ -1,0 +1,65 @@
+{% extends "vocal.html" %}
+
+{% block content %}
+<div class="container">
+
+    {% for project in projects %}
+    <div class="check-panel panel-{{'success' if projects[project]['passed'] else 'error'}}">
+        <h2>Checking against project <strong>{{project}}</strong></h2>
+        {% if projects[project]["passed"] %}
+        <h3>All checks passed</h3>
+        {% else %}
+        <h3>Failed</h3>
+        {% for error in projects[project]["errors"] %}
+        <p>{{error["loc"]}}: {{error["msg"]}}</p>
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    {% for definition in definitions %}
+    <div class="check-panel">
+        <h2>Checking against definition <strong>{{definition}}</strong></h2>
+
+        {% if not definitions[definition]["passed"] %}
+        <div class="check-panel panel-error">
+            <h3>Errors</h3>
+            {% for check in definitions[definition]["checks"] %}
+            {% if "error" in check %}
+            <p><strong>{{check["error"]["path"]}}:</strong> {{check["error"]["message"]}}</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="check-panel panel-success">
+            <h3>All checks passed</h3>
+        </div>
+        {% endif %}
+
+        {% if definitions[definition]["warnings"] %}
+        <div class="check-panel panel-warning">
+            <h3>Warnings</h3>
+            {% for check in definitions[definition]["checks"] %}
+            {% if "warning" in check and check["warning"] %}
+            <p><strong>{{check["warning"]["path"]}}:</strong> {{check["warning"]["message"]}}</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if definitions[definition]["comments"] %}
+        <div class="check-panel panel-info">
+            <h3>Comments</h3>
+            {% for check in definitions[definition]["checks"] %}
+            {% if "comment" in check and check["comment"] %}
+            <p><strong>{{check["comment"]["path"]}}:</strong> {{check["comment"]["message"]}}</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

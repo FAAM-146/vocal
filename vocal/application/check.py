@@ -273,7 +273,7 @@ def load_matching_definitions(filename: str) -> list[str]:
 
                 # If the filename matches the regex, we want to use this 
                 # definition.
-                if re.match(rex, filename):
+                if re.match(rex, os.path.basename(filename)):
                     p.print_err(f"{TS.BOLD}{TS.OKGREEN}✔{TS.ENDC} Found matching definition: {file}")
                     definitions.append(os.path.join(path, file))
 

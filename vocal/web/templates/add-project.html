@@ -1,0 +1,10 @@
+{% extends "vocal.html" %}
+
+{% block content %}
+<div class="checker ">
+    <form class="flex-column" action="/projects/add" method="post">
+        <input class="mb-1"  name="url" type="text" id="project-url" placeholder="Project URL" style="width:300px">
+        <input type="submit" value="Add project">
+    </form>
+</div>
+{% endblock %}

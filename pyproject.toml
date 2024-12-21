@@ -17,6 +17,7 @@ cfunits = "^3.3.7"
 pydantic = "^2.10.3"
 pyyaml = "^6.0.2"
 requests = "^2.32.3"
+fastapi = {extras = ["standard"], version = "^0.115.6"}
 
 [tool.poetry.scripts]
 vocal = 'vocal.cli.vocal:main'
