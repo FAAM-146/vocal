@@ -1,15 +1,29 @@
 {% extends "vocal.html" %}
 
+
 {% block content %}
-
-
 <div class="checker">
     <form action="/" method="post" enctype="multipart/form-data">
         <div class="flex-column">
             <label class="mb-1 s-2" for="ncfile">Select a file:</label>
             <input class="mb-1 s-1" type="file" id="ncfile" name="file" accept=".nc">
-            <input class="mb-1 s-2" type="submit">
         </div>
+       
     </form>
+    <div id="progress-bar" class="flex-column" style="display: none;">
+        <div class="s-2 mb-1">Checking file...</div>
+        <div class="progress-bar">
+            <div class="progress-bar-value"></div>
+        </div>
+    </div>
 </div>
+
+<script>
+    document.getElementById("ncfile").addEventListener("change", function() {
+        document.getElementById("progress-bar").style.display = "block";
+        document.querySelector("form").style.display = "none";
+        document.querySelector("form").submit();
+
+    });
+</script>
 {% endblock %}

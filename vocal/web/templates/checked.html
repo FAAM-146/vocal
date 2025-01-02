@@ -11,7 +11,7 @@
         {% else %}
         <h3>Failed</h3>
         {% for error in projects[project]["errors"] %}
-        <p>{{error["loc"]}}: {{error["msg"]}}</p>
+        <p>{{error["path"]}}: {{error["message"]}}</p>
         {% endfor %}
         {% endif %}
         {% endfor %}
@@ -25,7 +25,7 @@
         <div class="check-panel panel-error">
             <h3>Errors</h3>
             {% for check in definitions[definition]["checks"] %}
-            {% if "error" in check %}
+            {% if "error" in check and check["error"] %}
             <p><strong>{{check["error"]["path"]}}:</strong> {{check["error"]["message"]}}</p>
             {% endif %}
             {% endfor %}
