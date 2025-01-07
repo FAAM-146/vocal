@@ -6,10 +6,14 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Generator
 
+from vocal.utils import cache_dir
+
 
 def get_default_registry_path() -> str:
-    home = os.path.expanduser("~")
-    return os.path.join(home, ".vocal", "vocal-registry.yaml")
+    """
+    Return the default path to the project registry file.
+    """
+    return os.path.join(cache_dir(), "vocal-registry.yaml")
 
 
 @dataclass

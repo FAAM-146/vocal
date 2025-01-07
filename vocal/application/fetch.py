@@ -20,7 +20,7 @@ import yaml
 
 from vocal.application import parser_factory
 from vocal.application.register import register_project
-from vocal.utils import flip_to_dir
+from vocal.utils import cache_dir, flip_to_dir
 
 
 def get_projects_dir() -> str:
@@ -31,8 +31,7 @@ def get_projects_dir() -> str:
     Returns:
         str: The path to the projects directory.
     """
-    vocal_dir = os.path.expanduser("~/.vocal")
-    projects_dir = os.path.join(vocal_dir, "projects")
+    projects_dir = os.path.join(cache_dir(), "projects")
     os.makedirs(projects_dir, exist_ok=True)
     return projects_dir
 
