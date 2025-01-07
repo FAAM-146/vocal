@@ -5,6 +5,8 @@ from string import ascii_lowercase, ascii_uppercase
 from typing import Any, Callable, Collection
 from pydantic import model_validator, field_validator
 
+from vocal.vocab import Vocabulary
+
 
 def _randomize_object_name(obj: Any) -> Any:
     """
@@ -158,6 +160,20 @@ def dimension_exists(dimension_name: str) -> Callable:
             if dim.name == dimension_name:
                 return values
         raise ValueError(f"Dimension '{dimension_name}' not found in {name}")
+
+    return _randomize_object_name(_validator)
+
+
+def in_vocabulary(vocabulary: Vocabulary) -> Callable[[Any, str], str]:
+    """
+    Provides a validator which ensures an attribute takes a value in a
+    given vocabulary
+    """
+
+    def _validator(cls: Any, value: str) -> str:
+        if value not in vocabulary:
+            raise ValueError(f"'{value}' not in {vocabulary}")
+        return value
 
     return _randomize_object_name(_validator)
 
