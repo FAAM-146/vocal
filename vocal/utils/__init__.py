@@ -19,6 +19,16 @@ import pydantic
 import yaml
 
 
+def cache_dir() -> str:
+    """
+    Get the cache directory for vocal.
+
+    Returns:
+        the cache directory
+    """
+    return os.path.join(os.path.expanduser("~"), ".vocal")
+
+
 def _resolve_version(version: str, product_root: str) -> str:
     """
     Resolve the version of a dataset.
