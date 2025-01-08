@@ -1,12 +1,4 @@
-"""
-Allows the user to fetch a project from a git repository. The project must
-contain a `vocal.yaml` file in the root directory. This file should contain
-the following fields:
-
-- `project_directory`: The directory containing the project files.
-- `products_directory`: The directory containing the product definitions.
-- `conventions`: The conventions string for the project.
-"""
+"""Fetch a vocal project from a git repository."""
 
 import os
 import sys
