@@ -30,7 +30,7 @@ class ListVocabulary:
 
     def __str__(self) -> str:
         return self.name
-    
+
 
 class CFStandardNames:
     def __init__(self, version: int = 88, allow_alias: bool = True) -> None:
@@ -39,6 +39,7 @@ class CFStandardNames:
 
         Kwargs:
             version (int): The version of the CF Standard Names vocabulary to use.
+            allow_alias (bool): Whether to allow aliases in the vocabulary.
         """
         self.version = version
         self.allow_alias = allow_alias
