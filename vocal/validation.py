@@ -26,8 +26,21 @@ def _randomize_object_name(obj: Any) -> Any:
 
 def default_value(default: Any) -> Callable:
     """
+    This has been replaced by is_exact
+    """
+    return is_exact(default)
+
+
+def is_exact(default: Any) -> Callable:
+    """
     Provides a validator which ensures an attribute takes a given default
     value
+
+    Args:
+        default: The default value to check against
+
+    Returns:
+        A validator function
     """
 
     def _validator(cls, value):
@@ -42,6 +55,12 @@ def is_in(collection: Collection) -> Callable:
     """
     Provides a validator which ensures an attribute takes a value in a
     given collection
+
+    Args:
+        collection: The collection of allowed values
+
+    Returns:
+        A validator function
     """
 
     def _validator(cls, value):
@@ -55,7 +74,13 @@ def is_in(collection: Collection) -> Callable:
 def variable_exists(variable_name: str) -> Callable:
     """
     Provides a validator which ensures a variable exists in a given
-    group
+    group.
+
+    Args:
+        variable_name: The name of the variable to check
+
+    Returns:
+        A validator function
     """
 
     def _validator(cls, values):
@@ -76,6 +101,16 @@ def variable_exists(variable_name: str) -> Callable:
 
 
 def variable_has_types(variable_name: str, allowed_types: list[str]) -> Callable:
+    """
+    Provides a validator which ensures a variable is of a given type(s)
+
+    Args:
+        variable_name: The name of the variable to check
+        allowed_types: A list of allowed types for the variable
+
+    Returns:
+        A validator function
+    """
     def _validator(cls, values):
         variables = values.variables
         if variables is None:
@@ -96,6 +131,16 @@ def variable_has_types(variable_name: str, allowed_types: list[str]) -> Callable
 
 
 def variable_has_dimensions(variable_name: str, dimensions: list[str]) -> Callable:
+    """
+    Provides a validator which ensures a variable has the given dimensions
+
+    Args:
+        variable_name: The name of the variable to check
+        dimensions: A list of dimensions the variable should have
+
+    Returns:
+        A validator function
+    """
     def _validator(cls, values):
         variables = values.variables
         if variables is None:
@@ -123,8 +168,14 @@ def variable_has_dimensions(variable_name: str, dimensions: list[str]) -> Callab
 
 def group_exists(group_name: str) -> Callable:
     """
-    Provides a validator which ensures a variable exists in a given
-    group
+    Provides a validator which ensures a group exists in a given
+    supergroup
+
+    Args:
+        group_name: The name of the group to check
+
+    Returns:
+        A validator function
     """
 
     def _validator(cls, values):
@@ -146,8 +197,14 @@ def group_exists(group_name: str) -> Callable:
 
 def dimension_exists(dimension_name: str) -> Callable:
     """
-    Provides a validator which ensures a variable exists in a given
+    Provides a validator which ensures a dimension exists in a given
     group
+
+    Args:
+        dimension_name: The name of the dimension to check
+
+    Returns:
+        A validator function
     """
 
     def _validator(cls, values):
@@ -168,6 +225,12 @@ def in_vocabulary(vocabulary: Vocabulary) -> Callable[[Any, str], str]:
     """
     Provides a validator which ensures an attribute takes a value in a
     given vocabulary
+
+    Args:
+        vocabulary: The vocabulary of allowed values
+    
+    Returns:
+        A validator function
     """
 
     def _validator(cls: Any, value: str) -> str:
@@ -189,6 +252,13 @@ def substitute_placeholders(cls, values: dict) -> dict:
     attributes with placeholders (e.g. attr: <str: derived_from_file>)
     into valid values, by substituting them with the example from the attribute
     definition.
+
+    Args:
+        cls: The class being validated
+        values: The values being validated
+    
+    Returns:
+        The cls with the placeholders substituted for example values
     """
     DERIVED = "derived_from_file"
 
