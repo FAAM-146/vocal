@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "faam-vocal"
-version = "0.1.0"
+version = "0.2.0"
 description = "Compliance checking and metadata management"
 authors = ["Dave Sproson <dave.sproson@faam.ac.uk>"]
 license = "Open Government Licence v3.0"
