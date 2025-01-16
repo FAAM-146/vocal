@@ -1,7 +1,7 @@
 import os
 import requests
 
-from typing import Protocol, TypeVar
+from typing import Protocol
 import xml.etree.ElementTree as ET
 
 from vocal.utils import cache_dir
