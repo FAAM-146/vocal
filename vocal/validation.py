@@ -2,10 +2,32 @@ import functools
 import random
 
 from string import ascii_lowercase, ascii_uppercase
-from typing import Any, Callable, Collection
+from typing import Any, Callable, Collection, Protocol, cast
 from pydantic import model_validator, field_validator
 
 from vocal.vocab import Vocabulary
+
+
+class Validator[I](Protocol):
+    """
+    A validator is a mask for a function which can be annotated with attributes
+    in a type-safe way. 
+    """
+    description: str
+
+    @staticmethod
+    def __call__(value: I) -> I: ...
+
+
+def vocal_validator(description: str = ''):
+    """
+    A decorator for attaching metadata to a validator function.
+    """
+    def inner[I](func: Callable[[Any, I], I]) -> Validator[I]:
+        _func = cast(Validator[I], func)
+        _func.description = description
+        return _func
+    return inner
 
 
 def _randomize_object_name(obj: Any) -> Any:
@@ -43,6 +65,7 @@ def is_exact(default: Any) -> Callable:
         A validator function
     """
 
+    @vocal_validator(description=f"Value must be exactly {default}")
     def _validator(cls, value):
         if value != default:
             raise ValueError(f'text is incorrect. Got: "{value}", expected "{default}"')
@@ -63,6 +86,7 @@ def is_in(collection: Collection) -> Callable:
         A validator function
     """
 
+    @vocal_validator(description=f"Value must be in {collection}")
     def _validator(cls, value):
         if value not in collection:
             raise ValueError(f"Value should be in {collection}")
@@ -83,6 +107,7 @@ def variable_exists(variable_name: str) -> Callable:
         A validator function
     """
 
+    @vocal_validator(description=f"Variable '{variable_name}' must exist in group")
     def _validator(cls, values):
         try:
             variables = values.variables
@@ -111,6 +136,7 @@ def variable_has_types(variable_name: str, allowed_types: list[str]) -> Callable
     Returns:
         A validator function
     """
+    @vocal_validator(description=f"Variable '{variable_name}' must be one of {allowed_types}")
     def _validator(cls, values):
         variables = values.variables
         if variables is None:
@@ -141,6 +167,7 @@ def variable_has_dimensions(variable_name: str, dimensions: list[str]) -> Callab
     Returns:
         A validator function
     """
+    @vocal_validator(description=f"Variable '{variable_name}' must have dimensions {dimensions}")
     def _validator(cls, values):
         variables = values.variables
         if variables is None:
@@ -177,7 +204,7 @@ def group_exists(group_name: str) -> Callable:
     Returns:
         A validator function
     """
-
+    @vocal_validator(description=f"Group '{group_name}' must exist in supergroup")
     def _validator(cls, values):
         try:
             groups = values.groups
@@ -206,7 +233,7 @@ def dimension_exists(dimension_name: str) -> Callable:
     Returns:
         A validator function
     """
-
+    @vocal_validator(description=f"Dimension '{dimension_name}' must exist in group")
     def _validator(cls, values):
         dimensions = values.dimensions
         name = values.meta.name
@@ -232,7 +259,7 @@ def in_vocabulary(vocabulary: Vocabulary) -> Callable[[Any, str], str]:
     Returns:
         A validator function
     """
-
+    @vocal_validator(description=f"Value must be in {vocabulary}")
     def _validator(cls: Any, value: str) -> str:
         if value not in vocabulary:
             raise ValueError(f"'{value}' not in {vocabulary}")
