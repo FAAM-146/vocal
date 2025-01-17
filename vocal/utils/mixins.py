@@ -2,6 +2,7 @@ import inspect
 import os
 
 from vocal.utils import import_project
+from vocal.validation import Validator
 
 
 class DatasetUtilsMixin:
@@ -44,3 +45,13 @@ class DatasetUtilsMixin:
         return self.meta.file_pattern.format(
             **{i: j["regex"] for i, j in self._get_filecodec().items()}
         )
+
+
+class VocalValidatorsMixin:
+
+    @property
+    def validators(self) -> list[Validator]:
+        return [
+            getattr(self, i) for i in 
+            [j for j in dir(self) if j.startswith('_validate')]
+        ]
